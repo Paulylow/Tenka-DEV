@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recensement de l'Empire — Tenka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ink.css">
+<style>
+.filters{display:flex;gap:34px;align-items:flex-end;flex-wrap:wrap;margin-bottom:44px}
+.filters .search{flex:1;min-width:260px;max-width:520px}
+.filters .field{margin:0;min-width:180px}
+.count{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-45);margin-bottom:16px}
+</style>
+</head>
+<body data-demo-notice="on">
+
+<nav class="site" id="nav">
+  <a class="brand" href="index.html">
+    <span class="hanko sm" aria-hidden="true">天下</span>
+    <span class="name">TENKA</span>
+    <span class="sub">Serious&nbsp;RP · Japon&nbsp;féodal</span>
+  </a>
+  <div class="nav-links">
+    <a href="regles.html">Règles</a>
+    <a href="lore.html">Lore</a>
+    <a href="recensement.html">Recensement</a>
+    <a class="btn shu" id="nav-cta" href="espace.html">Nous rejoindre</a>
+  </div>
+  <div class="nav-stroke stroke-h" aria-hidden="true"></div>
+</nav>
+
+<div class="page-head" style="position:relative">
+  <span class="head-kanji" aria-hidden="true">籍</span>
+  <p class="crumb"><span class="stroke-h"></span> 戸籍 — Registre du shogunat</p>
+  <h1>Recensement de <span class="brushline">l'Empire</span></h1>
+  <p class="lede">L'annuaire public des âmes de l'archipel. Chaque fiche validée porte le sceau du staff — ce que tu lis ici, ton personnage peut le découvrir en jeu.</p>
+</div>
+
+<section class="sec tight">
+  <div class="sec-rail" aria-hidden="true"><span class="num">籍</span><span class="lbl">検索 — Recherche</span></div>
+  <div class="sec-body">
+    <div class="ink-frame rv in">
+      <div class="frame" aria-hidden="true"></div>
+      <div class="reg-inner">
+
+        <div class="filters">
+          <div class="search">
+            <div class="fieldline">
+              <input type="search" id="q" placeholder="Nom de personnage…" aria-label="Rechercher un personnage">
+              <div class="stroke-h" aria-hidden="true"></div>
+            </div>
+            <button type="button" onclick="applyFilters()" aria-label="Rechercher">検索</button>
+          </div>
+          <div class="field">
+            <label for="f-clan">Clan</label>
+            <select id="f-clan"><option value="">Tous les clans</option></select>
+            <div class="stroke-h" aria-hidden="true"></div>
+          </div>
+          <div class="field">
+            <label for="f-metier">Métier</label>
+            <select id="f-metier"><option value="">Tous les métiers</option></select>
+            <div class="stroke-h" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <p class="count" id="count"></p>
+
+        <table class="reg">
+          <thead><tr><th>Nom</th><th>Clan</th><th class="metier-col">Métier</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="brand-foot">
+    <span class="hanko sm" aria-hidden="true">天下</span>
+    <div>
+      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">TENKA</span>
+      <p>Serveur Minecraft Serious Roleplay — Japon féodal, ère Sengoku.</p>
+    </div>
+  </div>
+  <div>
+    <h4>Le serveur</h4>
+    <a href="regles.html">Règles</a>
+    <a href="lore.html">Lore &amp; histoire</a>
+    <a href="recensement.html">Recensement</a>
+  </div>
+  <div>
+    <h4>Communauté</h4>
+    <a href="#">Discord</a>
+    <a href="index.html#actus">Actualités</a>
+    <a href="espace.html">Espace joueur</a>
+  </div>
+</footer>
+<div class="legal">
+  <span>© 2026 Tenka</span>
+  <span>Non affilié à Mojang Studios ni Microsoft.</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+let ALL = [];
+
+async function loadAll(){
+  if (DEMO_MODE) {
+    ALL = DEMO.characters;
+  } else {
+    const { data, error } = await sb.from('characters')
+      .select('id, rp_name, metier, clan:clans(name)')
+      .eq('status', 'valide')
+      .order('rp_name');
+    ALL = data || [];
+  }
+  // options de filtres construites depuis les données
+  const clans = [...new Set(ALL.map(c => c.clan?.name).filter(Boolean))].sort();
+  const metiers = [...new Set(ALL.map(c => c.metier).filter(Boolean))].sort();
+  document.getElementById('f-clan').innerHTML =
+    '<option value="">Tous les clans</option><option value="__none__">Sans clan</option>' +
+    clans.map(c => `<option>${esc(c)}</option>`).join('');
+  document.getElementById('f-metier').innerHTML =
+    '<option value="">Tous les métiers</option>' +
+    metiers.map(m => `<option>${esc(m)}</option>`).join('');
+  applyFilters();
+}
+
+function applyFilters(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const fc = document.getElementById('f-clan').value;
+  const fm = document.getElementById('f-metier').value;
+  const rows = ALL.filter(c =>
+    (!q || c.rp_name.toLowerCase().includes(q)) &&
+    (!fc || (fc === '__none__' ? !c.clan : c.clan?.name === fc)) &&
+    (!fm || c.metier === fm)
+  );
+  document.getElementById('count').textContent =
+    rows.length + ' âme' + (rows.length > 1 ? 's' : '') + ' recensée' + (rows.length > 1 ? 's' : '');
+  document.getElementById('rows').innerHTML = rows.map(c => `
+    <tr onclick="location.href='personnage.html?id=${c.id}'">
+      <td class="nom">${esc(c.rp_name)}</td>
+      <td>${c.clan ? esc(c.clan.name) : '<span style="color:var(--ink-45)">Sans clan</span>'}</td>
+      <td class="metier metier-col">${esc(c.metier || '—')}</td>
+      <td style="text-align:right"><span class="fiche">Lire sa fiche</span></td>
+    </tr>`).join('') ||
+    '<tr><td colspan="4" style="color:var(--ink-45);padding:26px 0">Aucun personnage ne correspond — le registre attend son encre.</td></tr>';
+}
+
+document.getElementById('q').addEventListener('input', applyFilters);
+document.getElementById('f-clan').addEventListener('change', applyFilters);
+document.getElementById('f-metier').addEventListener('change', applyFilters);
+loadAll();
+</script>
+</body>
+</html>
