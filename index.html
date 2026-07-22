@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenka — Serious Roleplay · Japon féodal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/ink.css">
+<style>
+/* ---- styles propres à l'accueil ---- */
+header.hero{
+  position:relative;min-height:100svh;
+  max-width:1240px;margin:0 auto;padding:150px 48px 0;
+  display:grid;grid-template-columns:64px 1fr;gap:40px;
+}
+.hero-rail{writing-mode:vertical-rl;display:flex;align-items:center;gap:24px;font-family:var(--brush);padding-top:6px;height:fit-content}
+.hero-rail .t1{font-size:26px;letter-spacing:.34em;color:var(--sumi)}
+.hero-rail .t2{font-size:13px;letter-spacing:.4em;color:var(--ink-45);font-family:var(--display)}
+.hero-rail .tail{width:1px;flex:0 0 90px;background:linear-gradient(var(--sumi),transparent)}
+.hero-main{position:relative;display:flex;flex-direction:column;justify-content:center;padding-bottom:150px}
+.hero-kanji{
+  position:absolute;right:-40px;top:44%;transform:translateY(-50%) rotate(2deg);
+  font-family:var(--brush);font-size:clamp(280px,34vw,480px);line-height:1;
+  color:var(--sumi);opacity:.04;user-select:none;pointer-events:none;z-index:0;
+}
+.hero-eyebrow{display:flex;align-items:center;gap:18px;margin-bottom:28px;font-size:12px;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--ink-70)}
+.hero-eyebrow .stroke-h{width:64px;height:8px}
+h1{position:relative;z-index:2;font-family:var(--display);font-weight:700;font-size:clamp(46px,6.4vw,96px);line-height:1.16;letter-spacing:.015em;max-width:15ch;margin-bottom:32px}
+.hero-lede{position:relative;z-index:2;max-width:470px;color:var(--ink-70);font-size:15.5px;margin-bottom:48px}
+.hero-actions{position:relative;z-index:2;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.status{display:inline-flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.04em;color:var(--ink-70)}
+.status .lamp{width:9px;height:9px;border-radius:50%;background:#3E7C4F;position:relative}
+.status .lamp::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid #3E7C4F;opacity:.5;animation:ring 2.4s infinite}
+.status.offline .lamp{background:var(--ink-45)}
+.status.offline .lamp::after{display:none}
+.status strong{color:var(--sumi);font-weight:700}
+@keyframes ring{0%{transform:scale(.5);opacity:.6}100%{transform:scale(1.6);opacity:0}}
+.hero-art{position:absolute;left:-48px;right:-48px;bottom:0;height:230px;z-index:1;pointer-events:none}
+.hero-art svg{width:100%;height:100%}
+.scroll-hint{position:absolute;bottom:34px;left:0;z-index:2;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--ink-45);display:flex;align-items:center;gap:14px}
+.scroll-hint::after{content:"";width:1px;height:46px;background:var(--sumi);animation:drip 2.2s var(--ease) infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1);transform-origin:top}56%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+.marquee-wrap{margin-top:30px}
+.marquee{overflow:hidden;white-space:nowrap;padding:15px 0;background:var(--washi-deep)}
+.marquee .track{display:inline-flex;animation:slide 38s linear infinite}
+.marquee span{display:inline-flex;align-items:center;gap:28px;padding-right:28px;font-family:var(--display);font-size:14px;letter-spacing:.28em;color:var(--ink-70)}
+.marquee .kj{font-family:var(--brush);font-size:17px;letter-spacing:.2em;color:var(--sumi)}
+.marquee b{color:var(--shu)}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+.news-item{display:grid;grid-template-columns:110px 150px 1fr auto;gap:34px;align-items:baseline;padding:30px 6px;position:relative;isolation:isolate;transition:padding-left .4s var(--ease)}
+.news-item + .news-item{border-top:1px solid var(--ink-18)}
+.news-item::before{
+  content:"";position:absolute;inset:4px 0;z-index:-1;background:var(--ink-08);
+  transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 80' preserveAspectRatio='none'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015 0.12' numOctaves='3' seed='7'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='14'/%3E%3C/filter%3E%3Cpath d='M0 40 C150 28 400 52 600 36' fill='none' stroke='white' stroke-width='70' stroke-linecap='round' filter='url(%23r)'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 80' preserveAspectRatio='none'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015 0.12' numOctaves='3' seed='7'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='14'/%3E%3C/filter%3E%3Cpath d='M0 40 C150 28 400 52 600 36' fill='none' stroke='white' stroke-width='70' stroke-linecap='round' filter='url(%23r)'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+}
+.news-item:hover{padding-left:20px}
+.news-item:hover::before{transform:scaleX(1)}
+.news-item time{font-size:12px;letter-spacing:.14em;color:var(--ink-45);font-variant-numeric:tabular-nums}
+.news-item .cat{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-70)}
+.news-item .cat.evenement{color:var(--shu)}
+.news-item h3{font-family:var(--display);font-weight:600;font-size:21px;line-height:1.4}
+.news-item p{font-size:13.5px;color:var(--ink-70);margin-top:4px;max-width:56ch}
+
+.pillars{display:grid;grid-template-columns:repeat(3,1fr)}
+.pillar{padding:10px 38px 34px 0;position:relative}
+.pillar + .pillar{padding-left:38px}
+.pillar + .pillar::before{
+  content:"";position:absolute;left:0;top:6px;bottom:24px;width:5px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 200' preserveAspectRatio='none'%3E%3Cfilter id='r' x='-200%25' y='-5%25' width='500%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5 0.03' numOctaves='2' seed='12'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='4'/%3E%3C/filter%3E%3Cpath d='M4 4 C3 60 5 130 4 196' fill='none' stroke='%23191713' stroke-width='2' stroke-linecap='round' filter='url(%23r)' opacity='0.55'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+}
+.pillar .pk{font-family:var(--brush);font-size:110px;line-height:1;color:var(--sumi);display:block;margin-bottom:-8px;transition:color .45s var(--ease),transform .45s var(--ease)}
+.pillar:hover .pk{color:var(--shu);transform:rotate(-2deg)}
+.pillar .pk-splat{width:70px;height:70px;top:8px;left:74px;opacity:0;transition:opacity .45s;transform:scale(.8)}
+.pillar:hover .pk-splat{opacity:.5;transform:scale(1)}
+.pillar h3{font-family:var(--display);font-weight:700;font-size:22px;margin-bottom:12px}
+.pillar p{font-size:13.5px;color:var(--ink-70);margin-bottom:24px}
+.pillar .more{position:relative;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding-bottom:7px;transition:color .25s}
+.pillar .more::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:6px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 8' preserveAspectRatio='none'%3E%3Cfilter id='r' x='-10%25' y='-150%25' width='120%25' height='400%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.1 0.5' numOctaves='2' seed='5'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='4'/%3E%3C/filter%3E%3Cpath d='M3 4 C50 2 110 6 157 3' fill='none' stroke='%23191713' stroke-width='2.4' stroke-linecap='round' filter='url(%23r)'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+}
+.pillar .more:hover{color:var(--shu)}
+
+.gallery{display:flex;gap:36px;overflow-x:auto;padding:26px 6px 30px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:var(--ink-45) transparent}
+.kake{min-width:272px;scroll-snap-align:start;transition:transform .5s var(--ease)}
+.kake:hover{transform:translateY(-8px) rotate(-.5deg)}
+.kake .rod{height:10px;background:var(--sumi);border-radius:5px;position:relative}
+.kake .rod::before,.kake .rod::after{content:"";position:absolute;top:-4px;width:4px;height:18px;background:var(--sumi);border-radius:2px}
+.kake .rod::before{left:-3px}.kake .rod::after{right:-3px}
+.kake .paper{margin:0 14px;background:var(--paper);height:350px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 1px var(--ink-08)}
+.kake .paper svg{position:absolute;inset:0;width:100%;height:100%}
+.kake .paper .label{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-45)}
+.kake .paper .stamp{position:absolute;right:20px;bottom:42px}
+.kake .rod.bottom{height:13px;border-radius:6px}
+.gallery-note{font-size:12px;color:var(--ink-45);letter-spacing:.08em;margin-top:6px}
+
+.join{max-width:1240px;margin:140px auto 0;padding:0 48px;position:relative}
+.join .splat.a{width:110px;height:110px;top:-46px;right:100px;opacity:.75}
+.join .splat.b{width:60px;height:60px;bottom:-24px;left:60px;opacity:.5;transform:scaleX(-1)}
+.join-inner{position:relative;background:var(--sumi);color:var(--washi);padding:96px 64px;overflow:hidden}
+.join-grid{position:relative;display:grid;grid-template-columns:1.3fr 1fr;gap:60px;align-items:center}
+.join h2{color:var(--washi)}
+.join .steps{list-style:none;margin:26px 0 40px}
+.join .steps li{display:flex;gap:20px;align-items:baseline;padding:14px 0;border-bottom:1px solid rgba(242,237,225,.16);font-size:14.5px;color:rgba(242,237,225,.75)}
+.join .steps .n{font-family:var(--brush);color:#D4553F;font-size:20px}
+.join .btn{color:var(--washi)}
+.join .btn::before{filter:invert(1) brightness(1.6)}
+.join .btn::after{background:var(--washi)}
+.join .btn:hover{color:var(--sumi)}
+.ip-line{display:flex;align-items:center;gap:16px;margin-top:28px;font-size:14px;color:rgba(242,237,225,.6)}
+.ip-line code{font-family:var(--body);font-weight:700;color:var(--washi);letter-spacing:.08em;border-bottom:1px dashed rgba(242,237,225,.4);cursor:pointer;padding-bottom:2px}
+.ip-line code:hover{color:#E8A093;border-color:#E8A093}
+.join-hanko{display:flex;justify-content:center;position:relative;width:230px;height:230px;margin:0 auto;align-items:center}
+.join-hanko svg{position:absolute;inset:0;width:100%;height:100%}
+.join-hanko .enso{fill:none;stroke:#F2EDE1;stroke-width:7;stroke-linecap:round;opacity:.9;stroke-dasharray:640;stroke-dashoffset:640}
+.join-inner.in .enso{animation:draw 1.6s var(--ease) .3s forwards}
+@keyframes draw{to{stroke-dashoffset:60}}
+.join-hanko .hanko{width:120px;height:120px;font-size:40px;line-height:1.2}
+
+@media(max-width:980px){
+  .pillars{grid-template-columns:1fr}
+  .pillar + .pillar{padding-left:0;padding-top:30px}
+  .pillar + .pillar::before{display:none}
+  .join-grid{grid-template-columns:1fr}
+  .join-hanko{margin:0}
+  .news-item{grid-template-columns:96px 1fr auto}
+}
+@media(max-width:720px){
+  header.hero{grid-template-columns:1fr;padding-left:22px;padding-right:22px}
+  .hero-rail{display:none}
+  .hero-kanji{right:-70px;opacity:.06}
+  .hero-art{left:-22px;right:-22px}
+  .news-item{grid-template-columns:1fr;gap:6px}
+  .join{padding:0 22px}
+  .join-inner{padding:60px 28px}
+}
+@media(prefers-reduced-motion:reduce){.join-hanko .enso{stroke-dashoffset:60}}
+</style>
+</head>
+<body>
+
+<nav class="site" id="nav">
+  <a class="brand" href="index.html">
+    <span class="hanko sm" aria-hidden="true">天下</span>
+    <span class="name">TENKA</span>
+    <span class="sub">Serious&nbsp;RP · Japon&nbsp;féodal</span>
+  </a>
+  <div class="nav-links">
+    <a href="regles.html">Règles</a>
+    <a href="lore.html">Lore</a>
+    <a href="recensement.html">Recensement</a>
+    <a class="btn shu" id="nav-cta" href="espace.html">Nous rejoindre</a>
+  </div>
+  <div class="nav-stroke stroke-h" aria-hidden="true"></div>
+</nav>
+
+<header class="hero">
+  <div class="hero-rail" aria-hidden="true">
+    <span class="t1">天下</span>
+    <span class="t2">Serious Roleplay</span>
+    <span class="tail"></span>
+  </div>
+
+  <div class="hero-main">
+    <div class="hero-kanji" aria-hidden="true">乱</div>
+
+    <div class="hero-eyebrow rv in">
+      <span class="stroke-h"></span> Ère Sengoku — Serveur Minecraft
+    </div>
+
+    <h1 class="rv in">Le pays est en guerre.<br>
+      <span class="brushline">Quel sera ton rôle&nbsp;?</span>
+    </h1>
+
+    <p class="hero-lede rv in">
+      Incarne un personnage dans un Japon féodal déchiré par les clans.
+      Saisons vivantes, intrigues menées par le staff, esprits qui rôdent
+      dans les montagnes. Ici, ton histoire s'écrit à l'encre.
+    </p>
+
+    <div class="hero-actions rv in">
+      <a class="btn shu" href="espace.html"><span class="a">参</span> Nous rejoindre</a>
+      <a class="btn" href="lore.html">Découvrir le lore</a>
+      <span class="status" id="server-status">
+        <span class="lamp"></span>
+        <span id="status-text">Connexion…</span>
+      </span>
+    </div>
+
+    <div class="scroll-hint" aria-hidden="true">Défiler</div>
+
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 1200 230" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="brush" x="-10%" y="-40%" width="120%" height="180%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.03 0.14" numOctaves="3" seed="8"/>
+            <feDisplacementMap in="SourceGraphic" scale="10"/>
+          </filter>
+          <filter id="wash" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="9"/>
+          </filter>
+          <filter id="stamp">
+            <feTurbulence type="fractalNoise" baseFrequency="0.14" numOctaves="3" seed="2"/>
+            <feDisplacementMap in="SourceGraphic" scale="7"/>
+          </filter>
+        </defs>
+        <ellipse cx="300" cy="190" rx="260" ry="46" fill="#191713" opacity=".07" filter="url(#wash)"/>
+        <ellipse cx="820" cy="170" rx="320" ry="58" fill="#191713" opacity=".05" filter="url(#wash)"/>
+        <path d="M20 168 C150 158 230 96 340 92 C430 89 480 138 580 140" fill="none" stroke="#191713" stroke-width="7" stroke-linecap="round" filter="url(#brush)"/>
+        <path d="M560 150 C670 146 740 84 850 80 C950 77 1030 128 1180 124" fill="none" stroke="#191713" stroke-width="6" stroke-linecap="round" filter="url(#brush)"/>
+        <path d="M120 200 C300 192 520 176 700 182 C880 188 1020 172 1190 178" fill="none" stroke="#191713" stroke-width="3" stroke-linecap="round" opacity=".4" filter="url(#brush)"/>
+        <g stroke="#191713" stroke-linecap="round" fill="none" filter="url(#brush)">
+          <path d="M96 214 C 96 190 92 172 90 150" stroke-width="4.5"/>
+          <path d="M90 158 C 74 150 66 146 52 144 M91 156 C 106 148 116 146 130 142 M92 174 C 78 170 70 168 58 168 M93 173 C 107 168 116 166 128 164" stroke-width="3"/>
+        </g>
+        <g fill="#191713" filter="url(#stamp)">
+          <circle cx="602" cy="128" r="3.4"/><circle cx="622" cy="118" r="1.8"/>
+          <circle cx="360" cy="86" r="2.4"/><circle cx="1005" cy="118" r="2"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="stroke-h"></div>
+  <div class="marquee">
+    <div class="track" id="marquee-track">
+      <span>Serious Roleplay <b>·</b> Ère Sengoku <b>·</b> Saisons dynamiques <b>·</b> Clans &amp; intrigues <b>·</b> Esprits &amp; légendes <b>·</b> <span class="kj">天下布武</span> <b>·</b></span>
+    </div>
+  </div>
+  <div class="stroke-h"></div>
+</div>
+
+<section class="sec" id="actus">
+  <div class="sec-rail" aria-hidden="true"><span class="num">壱</span><span class="lbl">布告 — Proclamations</span></div>
+  <div class="sec-body">
+    <h2 class="rv">Actualités du domaine</h2>
+    <p class="sec-intro rv">Événements, changelogs et annonces du staff — la vie du serveur, consignée à l'encre.</p>
+    <div class="news-list rv">
+      <div class="stroke-h" aria-hidden="true"></div>
+      <div id="news-container"><!-- rempli par JS --></div>
+      <div class="stroke-h" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="piliers">
+  <div class="sec-rail" aria-hidden="true"><span class="num">弐</span><span class="lbl">心得 — Préceptes</span></div>
+  <div class="sec-body">
+    <h2 class="rv">Avant de fouler nos terres</h2>
+    <p class="sec-intro rv">Trois passages obligés pour tout nouvel arrivant sur l'archipel.</p>
+    <div class="pillars">
+      <div class="pillar rv">
+        <span class="splat pk-splat" aria-hidden="true"></span>
+        <span class="pk" aria-hidden="true">掟</span>
+        <h3>Les Règles</h3>
+        <p>Serious RP oblige : cohérence du personnage, fair-play et immersion avant tout. À lire avant toute création.</p>
+        <a class="more" href="regles.html">Lire le code d'honneur</a>
+      </div>
+      <div class="pillar rv">
+        <span class="splat pk-splat" aria-hidden="true"></span>
+        <span class="pk" aria-hidden="true">歴</span>
+        <h3>Le Lore</h3>
+        <p>Le pays se déchire. Découvre les clans, les provinces, et les rumeurs d'esprits qui remontent des vallées.</p>
+        <a class="more" href="lore.html">Explorer l'histoire</a>
+      </div>
+      <div class="pillar rv">
+        <span class="splat pk-splat" aria-hidden="true"></span>
+        <span class="pk" aria-hidden="true">道</span>
+        <h3>Nous rejoindre</h3>
+        <p>IP, mods requis, resource pack, Discord : le chemin pas à pas jusqu'à ton premier pas sur l'archipel.</p>
+        <a class="more" href="espace.html">Commencer le voyage</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-rail" aria-hidden="true"><span class="num">参</span><span class="lbl">風景 — Paysages</span></div>
+  <div class="sec-body">
+    <h2 class="rv">Aperçus de l'archipel</h2>
+    <p class="sec-intro rv">Rouleaux suspendus — remplacez les encres par vos screenshots sous shaders.</p>
+    <div class="rv">
+      <div class="gallery">
+        <figure class="kake">
+          <div class="rod"></div>
+          <div class="paper">
+            <svg viewBox="0 0 240 350" aria-hidden="true">
+              <defs><filter id="b1" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.04 0.12" numOctaves="3" seed="3"/><feDisplacementMap in="SourceGraphic" scale="8"/></filter></defs>
+              <circle cx="178" cy="64" r="16" fill="#191713" filter="url(#b1)" opacity=".18"/>
+              <path d="M30 240 C70 200 100 150 120 120 C140 150 175 205 214 244" fill="none" stroke="#191713" stroke-width="6" stroke-linecap="round" filter="url(#b1)"/>
+              <path d="M96 176 L146 176 M88 206 L156 206" stroke="#191713" stroke-width="3.4" stroke-linecap="round" filter="url(#b1)"/>
+              <path d="M114 176 L114 148 L130 148 L130 176" fill="none" stroke="#191713" stroke-width="3" filter="url(#b1)"/>
+              <ellipse cx="120" cy="290" rx="86" ry="14" fill="#191713" opacity=".08" filter="url(#b1)"/>
+            </svg>
+            <span class="hanko sm stamp" aria-hidden="true">景</span>
+            <span class="label">Temple de montagne</span>
+          </div>
+          <div class="rod bottom"></div>
+        </figure>
+        <figure class="kake">
+          <div class="rod"></div>
+          <div class="paper">
+            <svg viewBox="0 0 240 350" aria-hidden="true">
+              <defs><filter id="b2" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.04 0.12" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="8"/></filter></defs>
+              <path d="M20 210 C80 202 160 216 222 208" fill="none" stroke="#191713" stroke-width="4" stroke-linecap="round" filter="url(#b2)"/>
+              <path d="M56 208 C60 190 72 184 84 186 M84 186 L84 208 M64 208 L64 194" fill="none" stroke="#191713" stroke-width="3.4" stroke-linecap="round" filter="url(#b2)"/>
+              <path d="M128 244 C150 236 180 240 200 250 C180 258 148 256 128 244 Z" fill="#191713" filter="url(#b2)" opacity=".85"/>
+              <path d="M164 240 L164 224 C170 228 176 228 182 226" fill="none" stroke="#191713" stroke-width="2.6" stroke-linecap="round" filter="url(#b2)"/>
+              <ellipse cx="120" cy="292" rx="90" ry="12" fill="#191713" opacity=".07" filter="url(#b2)"/>
+            </svg>
+            <span class="hanko sm stamp" aria-hidden="true">景</span>
+            <span class="label">Village de pêcheurs</span>
+          </div>
+          <div class="rod bottom"></div>
+        </figure>
+        <figure class="kake">
+          <div class="rod"></div>
+          <div class="paper">
+            <svg viewBox="0 0 240 350" aria-hidden="true">
+              <defs><filter id="b3" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.04 0.12" numOctaves="3" seed="12"/><feDisplacementMap in="SourceGraphic" scale="8"/></filter></defs>
+              <path d="M28 250 C90 244 170 252 214 246 M40 220 C100 214 160 222 206 216 M56 190 C110 184 158 192 196 186 M74 162 C118 156 156 162 184 158" fill="none" stroke="#191713" stroke-width="3.6" stroke-linecap="round" filter="url(#b3)"/>
+              <path d="M120 132 C124 116 136 108 150 110" fill="none" stroke="#191713" stroke-width="3" stroke-linecap="round" filter="url(#b3)"/>
+              <circle cx="66" cy="84" r="13" fill="#191713" filter="url(#b3)" opacity=".16"/>
+            </svg>
+            <span class="hanko sm stamp" aria-hidden="true">景</span>
+            <span class="label">Rizières en terrasses</span>
+          </div>
+          <div class="rod bottom"></div>
+        </figure>
+        <figure class="kake">
+          <div class="rod"></div>
+          <div class="paper">
+            <svg viewBox="0 0 240 350" aria-hidden="true">
+              <defs><filter id="b4" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.04 0.12" numOctaves="3" seed="5"/><feDisplacementMap in="SourceGraphic" scale="8"/></filter></defs>
+              <path d="M74 250 L84 196 L156 196 L166 250" fill="none" stroke="#191713" stroke-width="4" filter="url(#b4)"/>
+              <path d="M70 196 C90 186 150 186 170 196 M82 168 C100 158 140 158 158 168 M92 168 L96 196 M148 168 L144 196" fill="none" stroke="#191713" stroke-width="3.4" stroke-linecap="round" filter="url(#b4)"/>
+              <path d="M78 168 C98 152 142 152 162 168" fill="none" stroke="#191713" stroke-width="4.4" stroke-linecap="round" filter="url(#b4)"/>
+              <path d="M108 250 L108 222 L132 222 L132 250" fill="none" stroke="#191713" stroke-width="3" filter="url(#b4)"/>
+              <ellipse cx="120" cy="288" rx="92" ry="13" fill="#191713" opacity=".08" filter="url(#b4)"/>
+            </svg>
+            <span class="hanko sm stamp" aria-hidden="true">景</span>
+            <span class="label">Château du daimyō</span>
+          </div>
+          <div class="rod bottom"></div>
+        </figure>
+      </div>
+      <p class="gallery-note">← Faire défiler →</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="registre">
+  <div class="sec-rail" aria-hidden="true"><span class="num">肆</span><span class="lbl">戸籍 — Registre</span></div>
+  <div class="sec-body">
+    <h2 class="rv">Recensement de l'Empire</h2>
+    <p class="sec-intro rv">L'annuaire public des âmes de l'archipel, tenu par le shogunat.</p>
+    <div class="ink-frame rv">
+      <div class="frame" aria-hidden="true"></div>
+      <div class="reg-inner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:30px;flex-wrap:wrap;margin-bottom:36px">
+          <p style="max-width:52ch;font-size:14px;color:var(--ink-70)">Cherche un personnage, découvre son clan et son métier, et lis l'histoire écrite par son joueur. Chaque fiche validée porte le sceau du staff.</p>
+          <span class="hanko" aria-hidden="true">戸籍</span>
+        </div>
+        <table class="reg">
+          <thead><tr><th>Nom</th><th>Clan</th><th class="metier-col">Métier</th><th></th></tr></thead>
+          <tbody id="home-reg"><!-- rempli par JS --></tbody>
+        </table>
+        <div style="margin-top:30px"><a class="btn sm" href="recensement.html">Ouvrir le recensement</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="join" id="rejoindre">
+  <span class="splat a" aria-hidden="true"></span>
+  <span class="splat b" aria-hidden="true"></span>
+  <div class="join-inner ink-block rv">
+    <div class="join-grid">
+      <div>
+        <h2>L'archipel t'attend.</h2>
+        <ol class="steps">
+          <li><span class="n">一</span> Connecte-toi avec Discord — un seul compte, site &amp; serveur.</li>
+          <li><span class="n">二</span> Rédige la fiche de ton personnage : nom, clan, histoire.</li>
+          <li><span class="n">三</span> Le staff appose son sceau sur ton background. À toi de jouer.</li>
+        </ol>
+        <button class="btn" onclick="loginDiscord()">Se connecter avec Discord</button>
+        <p class="ip-line">Adresse du serveur —
+          <code id="ip" title="Cliquer pour copier"></code>
+          <span id="ip-copied" style="opacity:0;transition:opacity .3s">copiée ✓</span>
+        </p>
+      </div>
+      <div class="join-hanko" aria-hidden="true">
+        <svg viewBox="0 0 230 230">
+          <defs><filter id="be" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="0.05 0.09" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter></defs>
+          <path class="enso" filter="url(#be)" d="M150 34 C 96 12 34 52 30 112 C 26 172 78 214 132 206 C 186 198 214 148 198 98"/>
+        </svg>
+        <span class="hanko">天下<br>布武</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="brand-foot">
+    <span class="hanko sm" aria-hidden="true">天下</span>
+    <div>
+      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">TENKA</span>
+      <p>Serveur Minecraft Serious Roleplay — Japon féodal, ère Sengoku.</p>
+    </div>
+  </div>
+  <div>
+    <h4>Le serveur</h4>
+    <a href="regles.html">Règles</a>
+    <a href="lore.html">Lore &amp; histoire</a>
+    <a href="recensement.html">Recensement</a>
+  </div>
+  <div>
+    <h4>Communauté</h4>
+    <a href="#" id="discord-link">Discord</a>
+    <a href="#actus">Actualités</a>
+    <a href="espace.html">Espace joueur</a>
+  </div>
+</footer>
+<div class="legal">
+  <span>© 2026 Tenka</span>
+  <span>Non affilié à Mojang Studios ni Microsoft.</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+document.getElementById('ip').textContent = MC_HOST;
+document.getElementById('ip').addEventListener('click', ()=>{
+  navigator.clipboard?.writeText(MC_HOST);
+  const ok = document.getElementById('ip-copied');
+  ok.style.opacity = 1; setTimeout(()=>ok.style.opacity = 0, 1600);
+});
+
+renderMcStatus();
+
+// ---- Actualités ----
+async function loadNews(){
+  let items;
+  if (DEMO_MODE) {
+    items = DEMO.news;
+  } else {
+    const { data } = await sb.from('news')
+      .select('id, category, title, body, published_at')
+      .eq('published', true)
+      .order('published_at', { ascending: false })
+      .limit(4);
+    items = data || [];
+  }
+  document.getElementById('news-container').innerHTML = items.map(n => `
+    <div class="news-item">
+      <time datetime="${n.published_at}">${fdate(n.published_at)}</time>
+      <span class="cat ${n.category}">${CAT_LABEL[n.category] || n.category}</span>
+      <div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div>
+    </div>`).join('') || '<p style="padding:26px 6px;color:var(--ink-45)">Aucune actualité pour le moment.</p>';
+}
+
+// ---- Aperçu du recensement (3 dernières fiches validées) ----
+async function loadRegPreview(){
+  let chars;
+  if (DEMO_MODE) {
+    chars = DEMO.characters;
+  } else {
+    const { data } = await sb.from('characters')
+      .select('id, rp_name, metier, clan:clans(name)')
+      .eq('status', 'valide')
+      .order('updated_at', { ascending: false })
+      .limit(3);
+    chars = data || [];
+  }
+  document.getElementById('home-reg').innerHTML = chars.map(c => `
+    <tr onclick="location.href='personnage.html?id=${c.id}'">
+      <td class="nom">${esc(c.rp_name)}</td>
+      <td>${c.clan ? esc(c.clan.name) : '<span style="color:var(--ink-45)">Sans clan</span>'}</td>
+      <td class="metier metier-col">${esc(c.metier || '—')}</td>
+      <td style="text-align:right"><span class="fiche">Lire sa fiche</span></td>
+    </tr>`).join('');
+}
+
+loadNews(); loadRegPreview();
+</script>
+</body>
+</html>
