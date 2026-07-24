@@ -9,16 +9,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/ink.css">
 <style>
-.mod-sheet{background:var(--washi-deep);padding:26px 28px;margin-top:24px;white-space:pre-wrap;font-size:14px;color:var(--ink-70)}
+.mod-sheet{background:var(--washi-deep);padding:26px 28px;margin-top:24px;white-space:pre-wrap;font-size:14px;color:var(--ink-70); border: 1px solid var(--ink-08); border-radius: 6px;}
 .mod-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px}
 .filter-line{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap;margin-bottom:26px}
 .filter-line .field{margin:0;min-width:170px}
 
-/* Nouveau style pour les boules de stats */
+/* Style pour les boules de stats */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 40px; margin: 16px 0; }
 .stat-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ink-08); padding-bottom: 6px; }
 .stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-70); }
-.stat-dots { display: flex; gap: 6px; }
+.stat-dots { display: flex; gap: 6px; flex-shrink: 0; }
 .stat-dots .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sumi); }
 .stat-dots .dot.filled { background: var(--sumi); }
 .stat-dots .dot.empty { border-color: var(--ink-18); }
@@ -83,11 +83,22 @@
             
             <div class="mod-sheet" id="md-bg"></div>
             
-            <div class="mod-actions">
-              <button class="btn sm shu" onclick="moderate('valide')"><span class="a">検</span> Apposer le sceau</button>
-              <button class="btn sm" onclick="moderate('rejete')">Rejeter</button>
-              <button class="linkline" onclick="document.getElementById('mod-detail').hidden = true">Fermer</button>
+            <!-- NOUVEAU : Chat intégré à la modération -->
+            <div style="margin-top:40px; padding-top:30px; border-top: 1px dashed var(--ink-18);">
+              <h4 style="color:var(--sumi); margin-bottom:14px; font-family:var(--display); font-size:18px;">Échange avec le joueur</h4>
+              <div id="mod-thread" class="thread" style="max-height:250px; overflow-y:auto; margin-bottom:16px;"></div>
+              
+              <div class="field">
+                <textarea id="mod-reply" style="min-height:80px" placeholder="Laisse un message au joueur pour justifier ton choix (obligatoire si tu demandes des modifications)..."></textarea>
+              </div>
+              
+              <div class="mod-actions">
+                <button class="btn sm shu" onclick="moderate('valide')"><span class="a">検</span> Valider la fiche</button>
+                <button class="btn sm" onclick="moderate('rejete')">Demander des modifications</button>
+                <button class="linkline" onclick="document.getElementById('mod-detail').hidden = true">Fermer</button>
+              </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -204,6 +215,7 @@
 <script src="assets/app.js"></script>
 <script>
 let ME = null, MOD_CURRENT = null, TK_CURRENT = null;
+let MOD_TICKET = null; // Ticket de validation associé à la fiche
 
 // onglets
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
@@ -213,39 +225,23 @@ document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click
 }));
 
 async function init(){
-  if (DEMO_MODE) {
-    document.getElementById('panel').hidden = false;
-    document.getElementById('mod-list').innerHTML = demoRow('Takeda Harunobu', 'Validation en attente (démo)', 'en_attente');
-    document.getElementById('tk-list').innerHTML = demoRow('Souci de resource pack', 'Question HRP (démo)', 'en_traitement');
-    document.getElementById('news-list').innerHTML = DEMO.news.map(n =>
-      demoRow(n.title, CAT_LABEL[n.category] + ' · ' + fdate(n.published_at), 'valide')).join('');
-    return;
-  }
-
   ME = await getProfile();
   if (!isStaff(ME)) { document.getElementById('denied').hidden = false; return; }
   document.getElementById('panel').hidden = false;
   loadModeration(); loadStaffTickets(); loadNewsAdmin();
 }
 
-function demoRow(t, m, s){
-  return `<div class="row"><div><p class="t">${esc(t)}</p><p class="m">${esc(m)}</p></div>${badge(s)}<span class="fiche">Démo</span></div>`;
-}
-
-// Générateur de boules pour les stats
 function renderStatDots(label, value) {
-  let val = value || 5; // Sécurité si la stat est null
+  let val = value || 5;
   let dots = '';
-  for (let i = 1; i <= 8; i++) {
-    dots += `<span class="dot ${i <= val ? 'filled' : 'empty'}"></span>`;
-  }
+  for (let i = 1; i <= 8; i++) dots += `<span class="dot ${i <= val ? 'filled' : 'empty'}"></span>`;
   return `<div class="stat-row"><span class="stat-label">${label}</span><div class="stat-dots">${dots}</div></div>`;
 }
 
 // ---------- MODÉRATION ----------
 async function loadModeration(){
   const { data } = await sb.from('characters')
-    .select('id, rp_name, age, metier, background, bg_secret, stat_for, stat_dex, stat_con, stat_int, stat_sag, stat_cha, stat_per, stat_dis, status, updated_at, clan:clans(name), owner:profiles!characters_user_id_fkey(discord_username)')
+    .select('id, user_id, rp_name, age, metier, background, bg_secret, stat_for, stat_dex, stat_con, stat_int, stat_sag, stat_cha, stat_per, stat_dis, status, updated_at, clan:clans(name), owner:profiles!characters_user_id_fkey(discord_username)')
     .eq('status', 'en_attente').order('updated_at');
   const list = data || [];
   document.getElementById('mod-count').textContent = list.length ? '(' + list.length + ')' : '';
@@ -259,61 +255,88 @@ async function loadModeration(){
     '<p style="color:var(--ink-45);padding:16px 0">Aucune fiche en attente — le registre est à jour.</p>';
 }
 
-function openMod(c){
+async function openMod(c){
   MOD_CURRENT = c;
   document.getElementById('mod-detail').hidden = false;
   document.getElementById('md-name').textContent = c.rp_name;
-  document.getElementById('md-meta').textContent =
-    (c.clan?.name || 'Sans clan') + ' · ' + (c.metier || '—') + ' · ' + (c.age ? c.age + ' ans' : 'âge ?');
+  document.getElementById('md-meta').textContent = (c.clan?.name || 'Sans clan') + ' · ' + (c.metier || '—') + ' · ' + (c.age ? c.age + ' ans' : 'âge ?');
+  document.getElementById('mod-reply').value = '';
+  document.getElementById('mod-thread').innerHTML = '<p class="m">Chargement de l\'historique...</p>';
   
   let htmlContent = `<strong>📖 Histoire Publique :</strong>\n${esc(c.background || '(vide)')}\n\n`;
-  if (c.bg_secret) {
-    htmlContent += `<span style="color:var(--shu)"><strong>🔒 Face Cachée (Secret) :</strong>\n${esc(c.bg_secret)}</span>\n\n`;
-  }
+  if (c.bg_secret) htmlContent += `<span style="color:var(--shu)"><strong>🔒 Face Cachée (Secret) :</strong>\n${esc(c.bg_secret)}</span>\n\n`;
   
-  htmlContent += `<strong>⚔️ Attributs :</strong>\n
-  <div class="stat-grid">
-    ${renderStatDots('Force', c.stat_for)}
-    ${renderStatDots('Dextérité', c.stat_dex)}
-    ${renderStatDots('Constitution', c.stat_con)}
-    ${renderStatDots('Intelligence', c.stat_int)}
-    ${renderStatDots('Sagesse', c.stat_sag)}
-    ${renderStatDots('Charisme', c.stat_cha)}
-    ${renderStatDots('Perception', c.stat_per)}
-    ${renderStatDots('Discrétion', c.stat_dis)}
+  htmlContent += `<strong>⚔️ Attributs :</strong>\n<div class="stat-grid">
+    ${renderStatDots('Force', c.stat_for)} ${renderStatDots('Dextérité', c.stat_dex)}
+    ${renderStatDots('Constitution', c.stat_con)} ${renderStatDots('Intelligence', c.stat_int)}
+    ${renderStatDots('Sagesse', c.stat_sag)} ${renderStatDots('Charisme', c.stat_cha)}
+    ${renderStatDots('Perception', c.stat_per)} ${renderStatDots('Discrétion', c.stat_dis)}
   </div>`;
-  
   document.getElementById('md-bg').innerHTML = htmlContent;
+
+  // Récupération du ticket de validation associé pour afficher le chat
+  const { data: t } = await sb.from('tickets').select('id').eq('user_id', c.user_id).eq('type', 'validation_background').maybeSingle();
+  MOD_TICKET = t;
+
+  if (t) {
+    const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', t.id).order('created_at');
+    document.getElementById('mod-thread').innerHTML = (msgs || []).map(m => {
+      const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
+      return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
+    }).join('') || '<p class="m">Aucun message précédent.</p>';
+  } else {
+    document.getElementById('mod-thread').innerHTML = '<p class="m" style="color:var(--shu)">Aucun ticket de validation trouvé. S\'il y a eu un bug, tu peux quand même valider.</p>';
+  }
 }
 
 async function moderate(status){
   if (!MOD_CURRENT) return;
-  const { error } = await sb.from('characters')
-    .update({ status, validated_by: ME.id }).eq('id', MOD_CURRENT.id);
+  const msg = document.getElementById('mod-reply').value.trim();
+
+  if (status === 'rejete' && !msg) {
+    return alert("Tu dois écrire un message pour expliquer au joueur ce qui doit être modifié.");
+  }
+
+  // 1. Mise à jour de la fiche
+  const { error } = await sb.from('characters').update({ status, validated_by: ME.id }).eq('id', MOD_CURRENT.id);
   if (error) return alert('Erreur : ' + error.message);
+
+  // 2. Gestion du message / notification via le ticket
+  let tId = MOD_TICKET ? MOD_TICKET.id : null;
+  
+  // S'il n'avait pas de ticket, on en crée un en urgence pour pouvoir le notifier
+  if (!tId) {
+    const { data: newT } = await sb.from('tickets').insert({ user_id: MOD_CURRENT.user_id, type: 'validation_background', subject: 'Validation — ' + MOD_CURRENT.rp_name }).select().single();
+    tId = newT?.id;
+  }
+
+  if (tId) {
+    let autoMsg = status === 'valide' ? "✅ Ta fiche a été validée et scellée par le staff ! Bienvenue sur l'archipel." : "⚠️ Des modifications sont requises pour que ta fiche soit validée.";
+    let finalMsg = msg ? (autoMsg + "\n\nMessage du staff :\n" + msg) : autoMsg;
+
+    await sb.from('ticket_messages').insert({ ticket_id: tId, author_id: ME.id, body: finalMsg });
+    await sb.from('tickets').update({ status: status === 'valide' ? 'resolu' : 'en_attente' }).eq('id', tId);
+  }
+
   document.getElementById('mod-detail').hidden = true;
   MOD_CURRENT = null;
+  MOD_TICKET = null;
   loadModeration();
+  loadStaffTickets(); // Met à jour la liste générale des tickets au passage
 }
 
 // ---------- TICKETS ----------
 async function loadStaffTickets(){
-  let q = sb.from('tickets')
-    .select('id, subject, type, status, created_at, owner:profiles!tickets_user_id_fkey(discord_username)')
-    .order('created_at', { ascending: false });
+  let q = sb.from('tickets').select('id, subject, type, status, created_at, owner:profiles!tickets_user_id_fkey(discord_username)').order('created_at', { ascending: false });
   const f = document.getElementById('tk-filter').value;
   if (f) q = q.eq('status', f);
   const { data } = await q;
-  const list = data || [];
-  document.getElementById('tk-count').textContent = '';
-  document.getElementById('tk-list').innerHTML = list.map(t => `
+  document.getElementById('tk-list').innerHTML = (data || []).map(t => `
     <div class="row" onclick="openStaffTicket('${t.id}')">
       <div><p class="t">${esc(t.subject)}</p>
       <p class="m">${TICKET_LABEL[t.type] || t.type} · ${esc(t.owner?.discord_username || '?')} · ${fdate(t.created_at)}</p></div>
-      ${badge(t.status)}
-      <span class="fiche">Ouvrir</span>
-    </div>`).join('') ||
-    '<p style="color:var(--ink-45);padding:16px 0">Aucun ticket dans ce filtre.</p>';
+      ${badge(t.status)}<span class="fiche">Ouvrir</span>
+    </div>`).join('') || '<p style="color:var(--ink-45);padding:16px 0">Aucun ticket dans ce filtre.</p>';
 }
 
 async function openStaffTicket(id){
@@ -322,14 +345,10 @@ async function openStaffTicket(id){
   document.getElementById('tk-detail').hidden = false;
   document.getElementById('tk-subject').textContent = t.subject;
   document.getElementById('tk-status').innerHTML = badge(t.status);
-  const { data: msgs } = await sb.from('ticket_messages')
-    .select('body, created_at, author:profiles(discord_username, role)')
-    .eq('ticket_id', id).order('created_at');
+  const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', id).order('created_at');
   document.getElementById('tk-thread').innerHTML = (msgs || []).map(m => {
     const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
-    return `<div class="msg ${staff ? 'staff' : ''}">
-      <p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>
-      ${esc(m.body)}</div>`;
+    return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
   }).join('');
 }
 
@@ -343,9 +362,7 @@ async function setTicketStatus(status){
 async function staffReply(){
   const body = document.getElementById('tk-reply').value.trim();
   if (!body || !TK_CURRENT) return;
-  await sb.from('ticket_messages').insert({
-    ticket_id: TK_CURRENT.id, author_id: ME.id, body,
-  });
+  await sb.from('ticket_messages').insert({ ticket_id: TK_CURRENT.id, author_id: ME.id, body });
   document.getElementById('tk-reply').value = '';
   if (TK_CURRENT.status === 'en_attente') await setTicketStatus('en_traitement');
   else openStaffTicket(TK_CURRENT.id);
@@ -354,47 +371,30 @@ async function staffReply(){
 // ---------- NEWS ----------
 async function loadNewsAdmin(){
   const { data } = await sb.from('news').select('*').order('published_at', { ascending: false });
-  document.getElementById('news-list').innerHTML =
-    '<p style="font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-45);margin-bottom:6px">Proclamations existantes</p>' +
+  document.getElementById('news-list').innerHTML = '<p style="font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-45);margin-bottom:6px">Proclamations existantes</p>' +
     ((data || []).map(n => `
       <div class="row" style="cursor:default">
-        <div><p class="t">${esc(n.title)}</p>
-        <p class="m">${CAT_LABEL[n.category]} · ${fdate(n.published_at)}</p></div>
+        <div><p class="t">${esc(n.title)}</p><p class="m">${CAT_LABEL[n.category]} · ${fdate(n.published_at)}</p></div>
         ${n.published ? badge('valide').replace('Validé','Publié') : badge('brouillon')}
         <span style="display:flex;gap:16px">
           <button class="linkline" onclick="toggleNews(${n.id}, ${!n.published})">${n.published ? 'Dépublier' : 'Publier'}</button>
           <button class="linkline" style="color:var(--shu)" onclick="deleteNews(${n.id})">Supprimer</button>
         </span>
-      </div>`).join('') ||
-    '<p style="color:var(--ink-45);padding:16px 0">Aucune actualité.</p>');
+      </div>`).join('') || '<p style="color:var(--ink-45);padding:16px 0">Aucune actualité.</p>');
 }
 
 async function saveNews(published){
   const title = document.getElementById('n-title').value.trim();
   const body = document.getElementById('n-body').value.trim();
   if (!title) return alert('Un titre est requis.');
-  const { error } = await sb.from('news').insert({
-    author_id: ME.id,
-    category: document.getElementById('n-cat').value,
-    title, body, published,
-    published_at: new Date().toISOString(),
-  });
+  const { error } = await sb.from('news').insert({ author_id: ME.id, category: document.getElementById('n-cat').value, title, body, published, published_at: new Date().toISOString() });
   if (error) return alert('Erreur : ' + error.message);
-  document.getElementById('n-title').value = '';
-  document.getElementById('n-body').value = '';
+  document.getElementById('n-title').value = ''; document.getElementById('n-body').value = '';
   loadNewsAdmin();
 }
 
-async function toggleNews(id, published){
-  await sb.from('news').update({ published }).eq('id', id);
-  loadNewsAdmin();
-}
-
-async function deleteNews(id){
-  if (!confirm('Supprimer cette actualité ?')) return;
-  await sb.from('news').delete().eq('id', id);
-  loadNewsAdmin();
-}
+async function toggleNews(id, published){ await sb.from('news').update({ published }).eq('id', id); loadNewsAdmin(); }
+async function deleteNews(id){ if (!confirm('Supprimer cette actualité ?')) return; await sb.from('news').delete().eq('id', id); loadNewsAdmin(); }
 
 init();
 </script>
