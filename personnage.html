@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fiche de personnage — Tenka</title>
+<title>Fiche de personnage — Hyōri</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -21,8 +21,8 @@
 
 <nav class="site" id="nav">
   <a class="brand" href="index.html">
-    <span class="hanko sm" aria-hidden="true">天下</span>
-    <span class="name">TENKA</span>
+    <span class="hanko sm" aria-hidden="true">表裏</span>
+    <span class="name">HYŌRI</span>
     <span class="sub">Serious&nbsp;RP · Japon&nbsp;féodal</span>
   </a>
   <div class="nav-links">
@@ -49,9 +49,9 @@
 
 <footer class="site">
   <div class="brand-foot">
-    <span class="hanko sm" aria-hidden="true">天下</span>
+    <span class="hanko sm" aria-hidden="true">表裏</span>
     <div>
-      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">TENKA</span>
+      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">HYŌRI</span>
       <p>Serveur Minecraft Serious Roleplay — Japon féodal, ère Sengoku.</p>
     </div>
   </div>
@@ -69,7 +69,7 @@
   </div>
 </footer>
 <div class="legal">
-  <span>© 2026 Tenka</span>
+  <span>© 2026 Hyōri RP</span>
   <span>Non affilié à Mojang Studios ni Microsoft.</span>
 </div>
 
@@ -86,8 +86,9 @@ async function loadSheet(){
   if (DEMO_MODE) {
     c = DEMO.characters.find(x => x.id === id) || DEMO.characters[0];
   } else if (id) {
+    // Correction ici : on va chercher le minecraft_pseudo dans la table profiles
     const { data } = await sb.from('characters')
-      .select('id, rp_name, age, metier, background, status, skin_pseudo, clan:clans(name)')
+      .select('id, rp_name, age, metier, background, status, clan:clans(name), owner:profiles!characters_user_id_fkey(minecraft_pseudo)')
       .eq('id', id).single();
     c = data;
   }
@@ -98,7 +99,10 @@ async function loadSheet(){
     return;
   }
 
-  document.title = c.rp_name + " — Tenka";
+  // On récupère le pseudo Minecraft
+  const skinPseudo = c.owner?.minecraft_pseudo || c.skin_pseudo;
+
+  document.title = c.rp_name + " — Hyōri";
   el.innerHTML = `
     ${c.status === 'valide' ? '<span class="hanko sheet-hanko" title="Fiche validée par le staff">検<br>閲</span>' : ''}
     <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:10px">Fiche de personnage</p>
@@ -109,12 +113,12 @@ async function loadSheet(){
       <span><b>Âge</b>${c.age ? esc(String(c.age)) + ' ans' : '—'}</span>
     </div>
     <div class="stroke-h" aria-hidden="true"></div>
-    ${c.skin_pseudo ? '<div class="skin3d" id="skin3d" title="Skin de ' + esc(c.skin_pseudo) + '"><canvas id="skin-canvas"></canvas></div>' : ''}
-    <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:14px">Histoire</p>
+    ${skinPseudo ? '<div class="skin3d" id="skin3d" title="Skin de ' + esc(skinPseudo) + '"><canvas id="skin-canvas"></canvas></div>' : ''}
+    <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:14px">Histoire publique</p>
     <div class="bg">${esc(c.background || "Cette âme n'a pas encore confié son histoire au registre.")}</div>
     <div style="clear:both"></div>
   `;
-  if (c.skin_pseudo) initSkin(c.skin_pseudo);
+  if (skinPseudo) initSkin(skinPseudo);
 }
 
 function initSkin(pseudo){
