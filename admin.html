@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel staff — Tenka</title>
+<title>Panel staff — Hyōri</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -13,14 +13,15 @@
 .mod-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px}
 .filter-line{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap;margin-bottom:26px}
 .filter-line .field{margin:0;min-width:170px}
+.admin-stats-badge { display:inline-block; background: var(--ink-18); padding: 2px 8px; border-radius: 4px; font-weight:bold; font-size:12px; margin-right:6px; margin-bottom:4px; color:var(--sumi); }
 </style>
 </head>
 <body data-demo-notice="on">
 
 <nav class="site" id="nav">
   <a class="brand" href="index.html">
-    <span class="hanko sm" aria-hidden="true">天下</span>
-    <span class="name">TENKA</span>
+    <span class="hanko sm" aria-hidden="true">表裏</span>
+    <span class="name">HYŌRI</span>
     <span class="sub">Serious&nbsp;RP · Japon&nbsp;féodal</span>
   </a>
   <div class="nav-links">
@@ -70,7 +71,9 @@
               <h3 id="md-name" style="font-size:20px"></h3>
               <span id="md-meta" class="panel-sub"></span>
             </div>
+            
             <div class="mod-sheet" id="md-bg"></div>
+            
             <div class="mod-actions">
               <button class="btn sm shu" onclick="moderate('valide')"><span class="a">検</span> Apposer le sceau</button>
               <button class="btn sm" onclick="moderate('rejete')">Rejeter</button>
@@ -163,9 +166,9 @@
 
 <footer class="site">
   <div class="brand-foot">
-    <span class="hanko sm" aria-hidden="true">天下</span>
+    <span class="hanko sm" aria-hidden="true">表裏</span>
     <div>
-      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">TENKA</span>
+      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">HYŌRI</span>
       <p>Serveur Minecraft Serious Roleplay — Japon féodal, ère Sengoku.</p>
     </div>
   </div>
@@ -183,7 +186,7 @@
   </div>
 </footer>
 <div class="legal">
-  <span>© 2026 Tenka</span>
+  <span>© 2026 Hyōri RP</span>
   <span>Non affilié à Mojang Studios ni Microsoft.</span>
 </div>
 
@@ -223,7 +226,7 @@ function demoRow(t, m, s){
 // ---------- MODÉRATION ----------
 async function loadModeration(){
   const { data } = await sb.from('characters')
-    .select('id, rp_name, age, metier, background, status, updated_at, clan:clans(name), owner:profiles!characters_user_id_fkey(discord_username)')
+    .select('id, rp_name, age, metier, background, bg_secret, stat_for, stat_dex, stat_con, stat_int, stat_sag, stat_cha, stat_per, stat_dis, status, updated_at, clan:clans(name), owner:profiles!characters_user_id_fkey(discord_username)')
     .eq('status', 'en_attente').order('updated_at');
   const list = data || [];
   document.getElementById('mod-count').textContent = list.length ? '(' + list.length + ')' : '';
@@ -243,7 +246,24 @@ function openMod(c){
   document.getElementById('md-name').textContent = c.rp_name;
   document.getElementById('md-meta').textContent =
     (c.clan?.name || 'Sans clan') + ' · ' + (c.metier || '—') + ' · ' + (c.age ? c.age + ' ans' : 'âge ?');
-  document.getElementById('md-bg').textContent = c.background || '(background vide)';
+  
+  // Affichage sécurisé des données
+  let htmlContent = `<strong>📖 Histoire Publique :</strong>\n${esc(c.background || '(vide)')}\n\n`;
+  if (c.bg_secret) {
+    htmlContent += `<span style="color:var(--shu)"><strong>🔒 Face Cachée (Secret) :</strong>\n${esc(c.bg_secret)}</span>\n\n`;
+  }
+  htmlContent += `<strong>⚔️ Attributs :</strong>\n<div style="margin-top:6px;">
+    <span class="admin-stats-badge">FOR ${c.stat_for}</span>
+    <span class="admin-stats-badge">DEX ${c.stat_dex}</span>
+    <span class="admin-stats-badge">CON ${c.stat_con}</span>
+    <span class="admin-stats-badge">INT ${c.stat_int}</span>
+    <span class="admin-stats-badge">SAG ${c.stat_sag}</span>
+    <span class="admin-stats-badge">CHA ${c.stat_cha}</span>
+    <span class="admin-stats-badge">PER ${c.stat_per}</span>
+    <span class="admin-stats-badge">DIS ${c.stat_dis}</span>
+  </div>`;
+  
+  document.getElementById('md-bg').innerHTML = htmlContent;
 }
 
 async function moderate(status){
