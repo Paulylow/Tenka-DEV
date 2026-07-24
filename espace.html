@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Espace joueur — Tenka</title>
+<title>Espace joueur — Hyōri</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -15,14 +15,22 @@
 .dash-head .who{font-size:14px;color:var(--ink-70)}
 .dash-head .who b{font-family:var(--display);font-size:17px;color:var(--sumi)}
 #ticket-detail .thread{max-height:420px;overflow-y:auto;padding-right:6px}
+
+/* Styles pour le système de stats */
+.stats-box { margin-bottom: 26px; background: var(--ink-08); padding: 20px; border-radius: 4px; }
+.stat-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+.stat-line > span:first-child { flex: 1; font-weight: 500; }
+.stat-line button { background: var(--washi); border: 1px solid var(--ink-18); border-radius: 4px; width: 28px; height: 28px; cursor: pointer; color: var(--sumi); font-weight: bold; transition: 0.2s; }
+.stat-line button:hover { background: var(--ink-18); }
+.stat-line > span:nth-child(3) { width: 36px; text-align: center; font-weight: 700; font-size: 16px; color: var(--sumi); }
 </style>
 </head>
 <body data-demo-notice="on">
 
 <nav class="site" id="nav">
   <a class="brand" href="index.html">
-    <span class="hanko sm" aria-hidden="true">天下</span>
-    <span class="name">TENKA</span>
+    <span class="hanko sm" aria-hidden="true">表裏</span>
+    <span class="name">HYŌRI</span>
     <span class="sub">Serious&nbsp;RP · Japon&nbsp;féodal</span>
   </a>
   <div class="nav-links">
@@ -67,7 +75,7 @@
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Liaison Minecraft</h3>
-          <p class="panel-sub">Ton pseudo exact en jeu, pour la whitelist</p>
+          <p class="panel-sub">Ton pseudo exact en jeu, pour la whitelist et afficher ton skin sur le registre.</p>
         </div>
         <div class="form-row">
           <div class="field">
@@ -115,19 +123,43 @@
             <div class="stroke-h" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="c-skin">Pseudo Minecraft (skin 3D sur la fiche publique)</label>
-            <input id="c-skin" type="text" placeholder="Pseudo exact du compte dont afficher le skin">
-            <div class="stroke-h" aria-hidden="true"></div>
-            <p class="hint">Laisse vide pour ne pas afficher de skin.</p>
+        
+        <!-- SYSTÈME DE STATS -->
+        <div class="stats-box">
+          <h4 style="margin-bottom:18px; font-family:var(--display); font-size:18px;">
+            Attributs 
+            <span style="font-weight:normal; font-family:var(--body); font-size:13px; float:right;">
+              Points restants : <b id="pts-left" style="font-size:16px;">0</b> / 40
+            </span>
+          </h4>
+          <div class="form-row" style="gap:24px;">
+            <div>
+              <div class="stat-line"><span>Force</span> <button onclick="modStat('for',-1)">-</button> <span id="v-for">5</span> <button onclick="modStat('for',1)">+</button></div>
+              <div class="stat-line"><span>Dextérité</span> <button onclick="modStat('dex',-1)">-</button> <span id="v-dex">5</span> <button onclick="modStat('dex',1)">+</button></div>
+              <div class="stat-line"><span>Constitution</span> <button onclick="modStat('con',-1)">-</button> <span id="v-con">5</span> <button onclick="modStat('con',1)">+</button></div>
+              <div class="stat-line"><span>Intelligence</span> <button onclick="modStat('int',-1)">-</button> <span id="v-int">5</span> <button onclick="modStat('int',1)">+</button></div>
+            </div>
+            <div>
+              <div class="stat-line"><span>Sagesse</span> <button onclick="modStat('sag',-1)">-</button> <span id="v-sag">5</span> <button onclick="modStat('sag',1)">+</button></div>
+              <div class="stat-line"><span>Charisme</span> <button onclick="modStat('cha',-1)">-</button> <span id="v-cha">5</span> <button onclick="modStat('cha',1)">+</button></div>
+              <div class="stat-line"><span>Perception</span> <button onclick="modStat('per',-1)">-</button> <span id="v-per">5</span> <button onclick="modStat('per',1)">+</button></div>
+              <div class="stat-line"><span>Discrétion</span> <button onclick="modStat('dis',-1)">-</button> <span id="v-dis">5</span> <button onclick="modStat('dis',1)">+</button></div>
+            </div>
           </div>
         </div>
+
         <div class="field">
-          <label for="c-bg">Background — l'histoire de ton personnage</label>
+          <label for="c-bg">Histoire publique (Visible de tous au registre)</label>
           <textarea id="c-bg" placeholder="D'où vient-il ? Que sait-il faire ? Que veut-il ?…"></textarea>
-          <p class="hint">Une fois validée, cette histoire sera publique au Recensement : n'y mets que ce qui peut être découvert en jeu.</p>
+          <p class="hint">Une fois validée, cette histoire sera publique : n'y mets que ce qui peut être découvert en jeu.</p>
         </div>
+        
+        <div class="field">
+          <label for="c-bg-secret" style="color:var(--shu)">Face cachée / Secrets (Staff uniquement) 🔒</label>
+          <textarea id="c-bg-secret" style="border-left: 3px solid var(--shu);" placeholder="Tes véritables intentions, un passé sombre que tu caches, ou des objets illégaux en ta possession..."></textarea>
+          <p class="hint">Ces informations ne seront jamais affichées publiquement sur le site.</p>
+        </div>
+        
         <div style="display:flex;gap:18px;flex-wrap:wrap">
           <button class="btn shu" onclick="saveCharacter(true)"><span class="a">封</span> Soumettre à validation</button>
           <button class="btn sm" onclick="saveCharacter(false)">Enregistrer le brouillon</button>
@@ -190,9 +222,9 @@
 
 <footer class="site">
   <div class="brand-foot">
-    <span class="hanko sm" aria-hidden="true">天下</span>
+    <span class="hanko sm" aria-hidden="true">表裏</span>
     <div>
-      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">TENKA</span>
+      <span style="font-family:var(--display);font-weight:800;letter-spacing:.24em">HYŌRI</span>
       <p>Serveur Minecraft Serious Roleplay — Japon féodal, ère Sengoku.</p>
     </div>
   </div>
@@ -210,7 +242,7 @@
   </div>
 </footer>
 <div class="legal">
-  <span>© 2026 Tenka</span>
+  <span>© 2026 Hyōri RP</span>
   <span>Non affilié à Mojang Studios ni Microsoft.</span>
 </div>
 
@@ -219,20 +251,40 @@
 <script src="assets/app.js"></script>
 <script>
 let ME = null, MYCHAR = null, CURRENT_TICKET = null;
+let STATS = { for: 5, dex: 5, con: 5, int: 5, sag: 5, cha: 5, per: 5, dis: 5 };
+
+// Met à jour l'affichage des points de stats
+function updateStatUI() {
+  let total = Object.values(STATS).reduce((a, b) => a + b, 0);
+  let left = 40 - total;
+  document.getElementById('pts-left').textContent = left;
+  document.getElementById('pts-left').style.color = (left === 0) ? "var(--valide)" : "var(--shu)";
+  for(let k in STATS) document.getElementById('v-' + k).textContent = STATS[k];
+}
+
+// Modifie une statistique (max 8, min 1, total max 40)
+function modStat(stat, delta) {
+  let total = Object.values(STATS).reduce((a, b) => a + b, 0);
+  let left = 40 - total;
+  if (delta > 0 && left <= 0) return; 
+  let newVal = STATS[stat] + delta;
+  if (newVal < 1 || newVal > 8) return; 
+  STATS[stat] = newVal;
+  updateStatUI();
+}
 
 async function init(){
   if (DEMO_MODE) {
-    // en démo : on montre le dashboard rempli avec des données factices
     document.getElementById('dash').hidden = false;
     document.getElementById('who-name').textContent = 'Voyageur (démo)';
     document.getElementById('c-name').value = 'Oyuki';
     document.getElementById('c-age').value = 26;
     document.getElementById('c-metier').value = 'Herboriste';
-    document.getElementById('c-skin').value = 'jeb_';
     document.getElementById('c-bg').value = DEMO.characters[1].background;
     document.getElementById('char-status').innerHTML = badge('valide');
     fillClans(DEMO.clans);
     renderTickets(DEMO.tickets);
+    updateStatUI();
     return;
   }
 
@@ -259,13 +311,20 @@ async function init(){
     document.getElementById('c-age').value = MYCHAR.age ?? '';
     document.getElementById('c-metier').value = MYCHAR.metier || '';
     document.getElementById('c-clan').value = MYCHAR.clan_id ?? '';
-    document.getElementById('c-skin').value = MYCHAR.skin_pseudo || ME?.minecraft_pseudo || '';
     document.getElementById('c-bg').value = MYCHAR.background || '';
+    document.getElementById('c-bg-secret').value = MYCHAR.bg_secret || '';
     document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
+    
+    // Remplissage des stats sauvegardées
+    STATS = {
+      for: MYCHAR.stat_for ?? 5, dex: MYCHAR.stat_dex ?? 5, con: MYCHAR.stat_con ?? 5, int: MYCHAR.stat_int ?? 5,
+      sag: MYCHAR.stat_sag ?? 5, cha: MYCHAR.stat_cha ?? 5, per: MYCHAR.stat_per ?? 5, dis: MYCHAR.stat_dis ?? 5
+    };
   } else {
     document.getElementById('char-status').innerHTML = '<span class="badge">Aucune fiche</span>';
   }
 
+  updateStatUI();
   loadTickets();
 }
 
@@ -280,32 +339,41 @@ async function saveProfile(){
   const pseudo = document.getElementById('mc-pseudo').value.trim();
   const { error } = await sb.from('profiles')
     .update({ minecraft_pseudo: pseudo || null }).eq('id', ME.id);
-  alert(error ? 'Erreur : ' + error.message : 'Pseudo enregistré.');
+  alert(error ? 'Erreur : ' + error.message : 'Pseudo Minecraft enregistré !');
 }
 
 async function saveCharacter(submit){
   if (DEMO_MODE) return alert('Mode démo — branche Supabase pour enregistrer.');
+  
+  let totalPts = Object.values(STATS).reduce((a, b) => a + b, 0);
+  if (submit && totalPts !== 40) {
+    return alert("Tu dois dépenser exactement 40 points d'attributs avant de soumettre.");
+  }
+
   const payload = {
     user_id: ME.id,
     rp_name: document.getElementById('c-name').value.trim(),
     age: parseInt(document.getElementById('c-age').value) || null,
     metier: document.getElementById('c-metier').value.trim() || null,
     clan_id: document.getElementById('c-clan').value || null,
-    skin_pseudo: document.getElementById('c-skin').value.trim() || null,
     background: document.getElementById('c-bg').value.trim() || null,
+    bg_secret: document.getElementById('c-bg-secret').value.trim() || null,
     status: submit ? 'en_attente' : 'brouillon',
+    stat_for: STATS.for, stat_dex: STATS.dex, stat_con: STATS.con, stat_int: STATS.int,
+    stat_sag: STATS.sag, stat_cha: STATS.cha, stat_per: STATS.per, stat_dis: STATS.dis
   };
+  
   if (!payload.rp_name) return alert('Ton personnage a besoin d\'un nom.');
 
   let res;
   if (MYCHAR) res = await sb.from('characters').update(payload).eq('id', MYCHAR.id).select().single();
   else        res = await sb.from('characters').insert(payload).select().single();
+  
   if (res.error) return alert('Erreur : ' + res.error.message);
   MYCHAR = res.data;
   document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
 
   if (submit) {
-    // ticket automatique de validation
     const { data: t } = await sb.from('tickets').insert({
       user_id: ME.id, type: 'validation_background',
       subject: 'Validation — ' + payload.rp_name,
@@ -316,6 +384,8 @@ async function saveCharacter(submit){
     });
     loadTickets();
     alert('Fiche soumise ! Le staff va l\'examiner.');
+  } else {
+    alert('Brouillon sauvegardé.');
   }
 }
 
