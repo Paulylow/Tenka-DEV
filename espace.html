@@ -23,9 +23,19 @@
 .stat-line button { background: var(--washi); border: 1px solid var(--ink-18); border-radius: 4px; width: 28px; height: 28px; cursor: pointer; color: var(--sumi); font-weight: bold; transition: 0.2s; }
 .stat-line button:hover { background: var(--ink-18); }
 .stat-line > span:nth-child(3) { width: 36px; text-align: center; font-weight: 700; font-size: 16px; color: var(--sumi); }
+
+/* --- NOUVEAU : Styles pour les Toast Notifications --- */
+.toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+.toast { background: var(--sumi); color: var(--washi); padding: 14px 22px; border-radius: 4px; font-size: 13.5px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(20px); transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); border-left: 4px solid var(--valide); pointer-events: auto; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { border-left-color: var(--shu); }
+.toast.info { border-left-color: #A07A1E; }
 </style>
 </head>
 <body data-demo-notice="on">
+
+<!-- Conteneur pour les notifications (Toasts) -->
+<div id="toast-container" class="toast-container"></div>
 
 <nav class="site" id="nav">
   <a class="brand" href="index.html">
@@ -253,6 +263,24 @@
 let ME = null, MYCHAR = null, CURRENT_TICKET = null;
 let STATS = { for: 5, dex: 5, con: 5, int: 5, sag: 5, cha: 5, per: 5, dis: 5 };
 
+// --- FONCTION DE TOAST NOTIFICATION ---
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  // Apparition
+  setTimeout(() => toast.classList.add('show'), 10);
+  
+  // Disparition
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4500);
+}
+
 // Met à jour l'affichage des points de stats
 function updateStatUI() {
   let total = Object.values(STATS).reduce((a, b) => a + b, 0);
@@ -335,19 +363,21 @@ function fillClans(clans){
 }
 
 async function saveProfile(){
-  if (DEMO_MODE) return alert('Mode démo — branche Supabase pour enregistrer.');
+  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour enregistrer.', 'info');
   const pseudo = document.getElementById('mc-pseudo').value.trim();
   const { error } = await sb.from('profiles')
     .update({ minecraft_pseudo: pseudo || null }).eq('id', ME.id);
-  alert(error ? 'Erreur : ' + error.message : 'Pseudo Minecraft enregistré !');
+    
+  if (error) showToast('Erreur : ' + error.message, 'error');
+  else showToast('Pseudo Minecraft enregistré !', 'success');
 }
 
 async function saveCharacter(submit){
-  if (DEMO_MODE) return alert('Mode démo — branche Supabase pour enregistrer.');
+  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour enregistrer.', 'info');
   
   let totalPts = Object.values(STATS).reduce((a, b) => a + b, 0);
   if (submit && totalPts !== 40) {
-    return alert("Tu dois dépenser exactement 40 points d'attributs avant de soumettre.");
+    return showToast("Tu dois dépenser exactement 40 points d'attributs avant de soumettre.", 'error');
   }
 
   const payload = {
@@ -363,21 +393,45 @@ async function saveCharacter(submit){
     stat_sag: STATS.sag, stat_cha: STATS.cha, stat_per: STATS.per, stat_dis: STATS.dis
   };
   
-  if (!payload.rp_name) return alert('Ton personnage a besoin d\'un nom.');
+  if (!payload.rp_name) return showToast('Ton personnage a besoin d\'un nom.', 'error');
+
+  // Protection anti-spam : On vérifie si quelque chose a réellement changé
+  if (MYCHAR && submit) {
+    const noChanges = 
+      MYCHAR.rp_name === payload.rp_name &&
+      MYCHAR.age == payload.age &&
+      MYCHAR.metier === payload.metier &&
+      MYCHAR.clan_id == payload.clan_id &&
+      MYCHAR.background === payload.background &&
+      MYCHAR.bg_secret === payload.bg_secret &&
+      MYCHAR.stat_for === payload.stat_for &&
+      MYCHAR.stat_dex === payload.stat_dex &&
+      MYCHAR.stat_con === payload.stat_con &&
+      MYCHAR.stat_int === payload.stat_int &&
+      MYCHAR.stat_sag === payload.stat_sag &&
+      MYCHAR.stat_cha === payload.stat_cha &&
+      MYCHAR.stat_per === payload.stat_per &&
+      MYCHAR.stat_dis === payload.stat_dis;
+      
+    if (noChanges && (MYCHAR.status === 'valide' || MYCHAR.status === 'en_attente')) {
+      return showToast('Aucune modification détectée. La fiche est déjà à jour.', 'info');
+    }
+  }
 
   let res;
   if (MYCHAR) res = await sb.from('characters').update(payload).eq('id', MYCHAR.id).select().single();
   else        res = await sb.from('characters').insert(payload).select().single();
   
-  if (res.error) return alert('Erreur : ' + res.error.message);
+  if (res.error) return showToast('Erreur : ' + res.error.message, 'error');
+  
   MYCHAR = res.data;
   document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
 
   if (submit) {
     loadTickets();
-    alert('Fiche soumise ! Le staff va l\'examiner dans l\'onglet de modération.');
+    showToast('Fiche soumise ! Le staff va l\'examiner dans l\'onglet de modération.', 'success');
   } else {
-    alert('Brouillon sauvegardé.');
+    showToast('Brouillon sauvegardé.', 'success');
   }
 }
 
@@ -401,17 +455,22 @@ function renderTickets(list){
 }
 
 async function createTicket(){
-  if (DEMO_MODE) return alert('Mode démo — branche Supabase pour ouvrir un ticket.');
+  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour ouvrir un ticket.', 'info');
   const type = document.getElementById('t-type').value;
   const subject = document.getElementById('t-subject').value.trim();
   const body = document.getElementById('t-body').value.trim();
-  if (!subject || !body) return alert('Objet et message sont requis.');
+  
+  if (!subject || !body) return showToast('Objet et message sont requis.', 'error');
+  
   const { data: t, error } = await sb.from('tickets')
     .insert({ user_id: ME.id, type, subject }).select().single();
-  if (error) return alert('Erreur : ' + error.message);
+    
+  if (error) return showToast('Erreur : ' + error.message, 'error');
+  
   await sb.from('ticket_messages').insert({ ticket_id: t.id, author_id: ME.id, body });
   document.getElementById('t-subject').value = '';
   document.getElementById('t-body').value = '';
+  showToast('Ticket créé avec succès.', 'success');
   loadTickets();
 }
 
@@ -444,12 +503,14 @@ async function openTicket(id){
 }
 
 async function sendReply(){
-  if (DEMO_MODE) return alert('Mode démo — branche Supabase pour répondre.');
+  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour répondre.', 'info');
   const body = document.getElementById('td-reply').value.trim();
   if (!body || !CURRENT_TICKET) return;
+  
   await sb.from('ticket_messages').insert({
     ticket_id: CURRENT_TICKET.id, author_id: ME.id, body,
   });
+  
   document.getElementById('td-reply').value = '';
   openTicket(CURRENT_TICKET.id);
 }
