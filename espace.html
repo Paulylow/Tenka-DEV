@@ -24,17 +24,16 @@
 .stat-line button:hover { background: var(--ink-18); }
 .stat-line > span:nth-child(3) { width: 36px; text-align: center; font-weight: 700; font-size: 16px; color: var(--sumi); }
 
-/* --- NOUVEAU : Styles pour les Toast Notifications --- */
+/* --- Toast Notifications --- */
 .toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
-.toast { background: var(--sumi); color: var(--washi); padding: 14px 22px; border-radius: 4px; font-size: 13.5px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(20px); transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); border-left: 4px solid var(--valide); pointer-events: auto; }
+.toast { background: #121215; color: #F0EAD6; padding: 14px 22px; border-radius: 4px; font-size: 13.5px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.4); opacity: 0; transform: translateY(20px); transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); border-left: 4px solid var(--valide); pointer-events: auto; }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.error { border-left-color: var(--shu); }
-.toast.info { border-left-color: #A07A1E; }
+.toast.info { border-left-color: #E6C073; }
 </style>
 </head>
 <body data-demo-notice="on">
 
-<!-- Conteneur pour les notifications (Toasts) -->
 <div id="toast-container" class="toast-container"></div>
 
 <nav class="site" id="nav">
@@ -48,7 +47,7 @@
     <a href="regles.html">Règles</a>
     <a href="lore.html">Lore</a>
     <a href="recensement.html">Recensement</a>
-    <a class="btn shu keep" href="espace.html">Espace joueur</a>
+    <a class="btn shu" id="nav-cta" href="espace.html">Espace joueur</a>
   </div>
   <div class="nav-stroke stroke-h" aria-hidden="true"></div>
 </nav>
@@ -64,15 +63,13 @@
   <div class="sec-rail" aria-hidden="true"><span class="num">侍</span><span class="lbl">陣屋 — Quartiers</span></div>
   <div class="sec-body">
 
-    <!-- ================= NON CONNECTÉ ================= -->
     <div class="gate" id="gate" hidden>
       <span class="k" aria-hidden="true">門</span>
       <h2 style="margin-bottom:14px">La porte est fermée.</h2>
-      <p style="color:var(--ink-70);margin-bottom:34px">Connecte-toi avec Discord pour créer ta fiche de personnage et contacter le staff. Un seul compte pour le site et le serveur.</p>
+      <p style="color:var(--ink-70);margin-bottom:34px">Connecte-toi avec Discord pour créer ta fiche de personnage et contacter le staff.</p>
       <button class="btn shu" onclick="loginDiscord('espace.html')">Se connecter avec Discord</button>
     </div>
 
-    <!-- ================= CONNECTÉ ================= -->
     <div id="dash" hidden>
       <div class="dash-head">
         <p class="who">Bienvenue, <b id="who-name">—</b> <span id="who-role"></span></p>
@@ -82,7 +79,6 @@
         </div>
       </div>
 
-      <!-- --- Profil / pseudo Minecraft --- -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Liaison Minecraft</h3>
@@ -100,15 +96,13 @@
         </div>
       </div>
 
-      <!-- --- Fiche de personnage --- -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Ma fiche de personnage</h3>
           <span id="char-status"></span>
         </div>
         <p class="panel-sub" style="margin:-14px 0 26px">
-          Relis le <a href="lore.html" style="border-bottom:1px solid var(--ink-45)">lore</a> avant d'écrire.
-          Toute modification repasse en validation par le staff.
+          Relis le <a href="lore.html" style="border-bottom:1px solid var(--ink-45)">lore</a> avant d'écrire. Toute modification repasse en validation par le staff.
         </p>
         <div class="form-row">
           <div class="field">
@@ -135,13 +129,9 @@
           </div>
         </div>
         
-        <!-- SYSTÈME DE STATS -->
         <div class="stats-box">
-          <h4 style="margin-bottom:18px; font-family:var(--display); font-size:18px;">
-            Attributs 
-            <span style="font-weight:normal; font-family:var(--body); font-size:13px; float:right;">
-              Points restants : <b id="pts-left" style="font-size:16px;">0</b> / 40
-            </span>
+          <h4 style="margin-bottom:18px; font-family:var(--display); font-size:18px; color:var(--sumi)">
+            Attributs <span style="font-weight:normal; font-family:var(--body); font-size:13px; float:right;">Points restants : <b id="pts-left" style="font-size:16px;">0</b> / 40</span>
           </h4>
           <div class="form-row" style="gap:24px;">
             <div>
@@ -162,13 +152,11 @@
         <div class="field">
           <label for="c-bg">Histoire publique (Visible de tous au registre)</label>
           <textarea id="c-bg" placeholder="D'où vient-il ? Que sait-il faire ? Que veut-il ?…"></textarea>
-          <p class="hint">Une fois validée, cette histoire sera publique : n'y mets que ce qui peut être découvert en jeu.</p>
         </div>
         
         <div class="field">
           <label for="c-bg-secret" style="color:var(--shu)">Face cachée / Secrets (Staff uniquement) 🔒</label>
-          <textarea id="c-bg-secret" style="border-left: 3px solid var(--shu);" placeholder="Tes véritables intentions, un passé sombre que tu caches, ou des objets illégaux en ta possession..."></textarea>
-          <p class="hint">Ces informations ne seront jamais affichées publiquement sur le site.</p>
+          <textarea id="c-bg-secret" style="border-left: 3px solid var(--shu);" placeholder="Tes véritables intentions, un passé sombre..."></textarea>
         </div>
         
         <div style="display:flex;gap:18px;flex-wrap:wrap">
@@ -177,7 +165,6 @@
         </div>
       </div>
 
-      <!-- --- Tickets --- -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Requêtes au staff</h3>
@@ -209,7 +196,6 @@
 
         <div class="rowlist" id="ticket-list" style="margin-top:40px"></div>
 
-        <!-- détail de ticket -->
         <div id="ticket-detail" hidden style="margin-top:34px">
           <div class="stroke-h" aria-hidden="true"></div>
           <div class="panel-head" style="margin-top:28px">
@@ -264,25 +250,19 @@
 let ME = null, MYCHAR = null, CURRENT_TICKET = null;
 let STATS = { for: 5, dex: 5, con: 5, int: 5, sag: 5, cha: 5, per: 5, dis: 5 };
 
-// --- FONCTION DE TOAST NOTIFICATION ---
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = message;
   container.appendChild(toast);
-  
-  // Apparition
   setTimeout(() => toast.classList.add('show'), 10);
-  
-  // Disparition
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
   }, 4500);
 }
 
-// Met à jour l'affichage des points de stats
 function updateStatUI() {
   let total = Object.values(STATS).reduce((a, b) => a + b, 0);
   let left = 40 - total;
@@ -291,7 +271,6 @@ function updateStatUI() {
   for(let k in STATS) document.getElementById('v-' + k).textContent = STATS[k];
 }
 
-// Modifie une statistique (max 8, min 1, total max 40)
 function modStat(stat, delta) {
   let total = Object.values(STATS).reduce((a, b) => a + b, 0);
   let left = 40 - total;
@@ -343,8 +322,6 @@ async function init(){
     document.getElementById('c-bg').value = MYCHAR.background || '';
     document.getElementById('c-bg-secret').value = MYCHAR.bg_secret || '';
     document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
-    
-    // Remplissage des stats sauvegardées
     STATS = {
       for: MYCHAR.stat_for ?? 5, dex: MYCHAR.stat_dex ?? 5, con: MYCHAR.stat_con ?? 5, int: MYCHAR.stat_int ?? 5,
       sag: MYCHAR.stat_sag ?? 5, cha: MYCHAR.stat_cha ?? 5, per: MYCHAR.stat_per ?? 5, dis: MYCHAR.stat_dis ?? 5
@@ -364,26 +341,21 @@ function fillClans(clans){
 }
 
 async function saveProfile(){
-  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour enregistrer.', 'info');
+  if (DEMO_MODE) return showToast('Mode démo.', 'info');
   const pseudo = document.getElementById('mc-pseudo').value.trim();
-  const { error } = await sb.from('profiles')
-    .update({ minecraft_pseudo: pseudo || null }).eq('id', ME.id);
-    
+  const { error } = await sb.from('profiles').update({ minecraft_pseudo: pseudo || null }).eq('id', ME.id);
   if (error) showToast('Erreur : ' + error.message, 'error');
   else showToast('Pseudo Minecraft enregistré !', 'success');
 }
 
 async function saveCharacter(submit){
-  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour enregistrer.', 'info');
+  if (DEMO_MODE) return showToast('Mode démo.', 'info');
   
   let totalPts = Object.values(STATS).reduce((a, b) => a + b, 0);
-  if (submit && totalPts !== 40) {
-    return showToast("Tu dois dépenser exactement 40 points d'attributs avant de soumettre.", 'error');
-  }
+  if (submit && totalPts !== 40) return showToast("Tu dois dépenser exactement 40 points d'attributs.", 'error');
 
   const payload = {
-    user_id: ME.id,
-    rp_name: document.getElementById('c-name').value.trim(),
+    user_id: ME.id, rp_name: document.getElementById('c-name').value.trim(),
     age: parseInt(document.getElementById('c-age').value) || null,
     metier: document.getElementById('c-metier').value.trim() || null,
     clan_id: document.getElementById('c-clan').value || null,
@@ -396,24 +368,8 @@ async function saveCharacter(submit){
   
   if (!payload.rp_name) return showToast('Ton personnage a besoin d\'un nom.', 'error');
 
-  // Protection anti-spam : On vérifie si quelque chose a réellement changé
   if (MYCHAR && submit) {
-    const noChanges = 
-      MYCHAR.rp_name === payload.rp_name &&
-      MYCHAR.age == payload.age &&
-      MYCHAR.metier === payload.metier &&
-      MYCHAR.clan_id == payload.clan_id &&
-      MYCHAR.background === payload.background &&
-      MYCHAR.bg_secret === payload.bg_secret &&
-      MYCHAR.stat_for === payload.stat_for &&
-      MYCHAR.stat_dex === payload.stat_dex &&
-      MYCHAR.stat_con === payload.stat_con &&
-      MYCHAR.stat_int === payload.stat_int &&
-      MYCHAR.stat_sag === payload.stat_sag &&
-      MYCHAR.stat_cha === payload.stat_cha &&
-      MYCHAR.stat_per === payload.stat_per &&
-      MYCHAR.stat_dis === payload.stat_dis;
-      
+    const noChanges = MYCHAR.rp_name === payload.rp_name && MYCHAR.age == payload.age && MYCHAR.metier === payload.metier && MYCHAR.clan_id == payload.clan_id && MYCHAR.background === payload.background && MYCHAR.bg_secret === payload.bg_secret && MYCHAR.stat_for === payload.stat_for && MYCHAR.stat_dex === payload.stat_dex && MYCHAR.stat_con === payload.stat_con && MYCHAR.stat_int === payload.stat_int && MYCHAR.stat_sag === payload.stat_sag && MYCHAR.stat_cha === payload.stat_cha && MYCHAR.stat_per === payload.stat_per && MYCHAR.stat_dis === payload.stat_dis;
     if (noChanges && (MYCHAR.status === 'valide' || MYCHAR.status === 'en_attente')) {
       return showToast('Aucune modification détectée. La fiche est déjà à jour.', 'info');
     }
@@ -424,22 +380,32 @@ async function saveCharacter(submit){
   else        res = await sb.from('characters').insert(payload).select().single();
   
   if (res.error) return showToast('Erreur : ' + res.error.message, 'error');
-  
   MYCHAR = res.data;
   document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
 
   if (submit) {
+    // Création ou mise à jour du ticket de validation unique
+    const { data: existing } = await sb.from('tickets').select('id').eq('user_id', ME.id).eq('type', 'validation_background').maybeSingle();
+    let tId;
+    if (!existing) {
+      const { data: t } = await sb.from('tickets').insert({ user_id: ME.id, type: 'validation_background', subject: 'Validation — ' + payload.rp_name }).select().single();
+      tId = t?.id;
+    } else {
+      tId = existing.id;
+      await sb.from('tickets').update({ subject: 'Validation — ' + payload.rp_name, status: 'en_attente' }).eq('id', tId);
+    }
+    if (tId) {
+      await sb.from('ticket_messages').insert({ ticket_id: tId, author_id: ME.id, body: 'Fiche soumise ou modifiée pour le personnage : ' + payload.rp_name });
+    }
     loadTickets();
-    showToast('Fiche soumise ! Le staff va l\'examiner dans l\'onglet de modération.', 'success');
+    showToast('Fiche soumise ! Le staff va l\'examiner.', 'success');
   } else {
     showToast('Brouillon sauvegardé.', 'success');
   }
 }
 
 async function loadTickets(){
-  const { data } = await sb.from('tickets')
-    .select('*').eq('user_id', ME.id)
-    .order('created_at', { ascending: false });
+  const { data } = await sb.from('tickets').select('*').eq('user_id', ME.id).order('created_at', { ascending: false });
   renderTickets(data || []);
 }
 
@@ -451,23 +417,17 @@ function renderTickets(list){
         <div><p class="t">${esc(t.subject)}</p><p class="m">${TICKET_LABEL[t.type] || t.type} · ${fdate(t.created_at)}</p></div>
         ${badge(t.status)}
         <span class="fiche">Ouvrir</span>
-      </div>`).join('') ||
-    '<p style="color:var(--ink-45);padding:18px 0">Aucun ticket — tout va bien, ou tout reste à faire.</p>');
+      </div>`).join('') || '<p style="color:var(--ink-45);padding:18px 0">Aucun ticket.</p>');
 }
 
 async function createTicket(){
-  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour ouvrir un ticket.', 'info');
+  if (DEMO_MODE) return showToast('Mode démo.', 'info');
   const type = document.getElementById('t-type').value;
   const subject = document.getElementById('t-subject').value.trim();
   const body = document.getElementById('t-body').value.trim();
-  
   if (!subject || !body) return showToast('Objet et message sont requis.', 'error');
-  
-  const { data: t, error } = await sb.from('tickets')
-    .insert({ user_id: ME.id, type, subject }).select().single();
-    
+  const { data: t, error } = await sb.from('tickets').insert({ user_id: ME.id, type, subject }).select().single();
   if (error) return showToast('Erreur : ' + error.message, 'error');
-  
   await sb.from('ticket_messages').insert({ ticket_id: t.id, author_id: ME.id, body });
   document.getElementById('t-subject').value = '';
   document.getElementById('t-body').value = '';
@@ -476,50 +436,28 @@ async function createTicket(){
 }
 
 async function openTicket(id){
-  if (DEMO_MODE) {
-    const t = DEMO.tickets.find(x => x.id === id);
-    CURRENT_TICKET = t;
-    document.getElementById('ticket-detail').hidden = false;
-    document.getElementById('td-subject').textContent = t.subject;
-    document.getElementById('td-status').innerHTML = badge(t.status);
-    document.getElementById('td-thread').innerHTML =
-      '<div class="msg"><p class="who">Toi</p>Exemple de message de ticket en mode démo.</div>' +
-      '<div class="msg staff"><p class="who">Staff</p>Réponse du staff — tout est en ordre !</div>';
-    return;
-  }
   const { data: t } = await sb.from('tickets').select('*').eq('id', id).single();
   CURRENT_TICKET = t;
   document.getElementById('ticket-detail').hidden = false;
   document.getElementById('td-subject').textContent = t.subject;
   document.getElementById('td-status').innerHTML = badge(t.status);
-  const { data: msgs } = await sb.from('ticket_messages')
-    .select('body, created_at, author:profiles(discord_username, role)')
-    .eq('ticket_id', id).order('created_at');
+  const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', id).order('created_at');
   document.getElementById('td-thread').innerHTML = (msgs || []).map(m => {
     const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
-    return `<div class="msg ${staff ? 'staff' : ''}">
-      <p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>
-      ${esc(m.body)}</div>`;
+    return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
   }).join('');
 }
 
 async function sendReply(){
-  if (DEMO_MODE) return showToast('Mode démo — branche Supabase pour répondre.', 'info');
+  if (DEMO_MODE) return showToast('Mode démo.', 'info');
   const body = document.getElementById('td-reply').value.trim();
   if (!body || !CURRENT_TICKET) return;
-  
-  await sb.from('ticket_messages').insert({
-    ticket_id: CURRENT_TICKET.id, author_id: ME.id, body,
-  });
-  
+  await sb.from('ticket_messages').insert({ ticket_id: CURRENT_TICKET.id, author_id: ME.id, body });
   document.getElementById('td-reply').value = '';
   openTicket(CURRENT_TICKET.id);
 }
 
-function closeDetail(){
-  document.getElementById('ticket-detail').hidden = true;
-  CURRENT_TICKET = null;
-}
+function closeDetail(){ document.getElementById('ticket-detail').hidden = true; CURRENT_TICKET = null; }
 
 init();
 </script>
