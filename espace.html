@@ -97,7 +97,7 @@
         </div>
         <p class="panel-sub" style="margin:-14px 0 26px">
           Relis le <a href="lore.html" style="border-bottom:1px solid var(--ink-45)">lore</a> avant d'écrire.
-          Toute modification repasse en validation — le staff appose son sceau via un ticket automatique.
+          Toute modification repasse en validation par le staff.
         </p>
         <div class="form-row">
           <div class="field">
@@ -374,16 +374,8 @@ async function saveCharacter(submit){
   document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
 
   if (submit) {
-    const { data: t } = await sb.from('tickets').insert({
-      user_id: ME.id, type: 'validation_background',
-      subject: 'Validation — ' + payload.rp_name,
-    }).select().single();
-    if (t) await sb.from('ticket_messages').insert({
-      ticket_id: t.id, author_id: ME.id,
-      body: 'Fiche soumise à validation : ' + location.origin + location.pathname.replace('espace.html','personnage.html') + '?id=' + MYCHAR.id,
-    });
     loadTickets();
-    alert('Fiche soumise ! Le staff va l\'examiner.');
+    alert('Fiche soumise ! Le staff va l\'examiner dans l\'onglet de modération.');
   } else {
     alert('Brouillon sauvegardé.');
   }
