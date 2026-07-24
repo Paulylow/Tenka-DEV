@@ -30,6 +30,10 @@
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.error { border-left-color: var(--shu); }
 .toast.info { border-left-color: #E6C073; }
+
+/* Verrouillage visuel */
+textarea:disabled { opacity: 0.4; cursor: not-allowed; background: var(--washi) !important; }
+button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 </style>
 </head>
 <body data-demo-notice="on">
@@ -79,7 +83,6 @@
         </div>
       </div>
 
-      <!-- 1. LIAISON MINECRAFT -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Liaison Minecraft</h3>
@@ -97,7 +100,6 @@
         </div>
       </div>
 
-      <!-- 2. FICHE DE PERSONNAGE -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Ma fiche de personnage</h3>
@@ -167,7 +169,6 @@
         </div>
       </div>
 
-      <!-- 3. MES TICKETS (Séparé du formulaire) -->
       <div class="panel rv in" id="mes-tickets">
         <div class="panel-head">
           <h3>Mes tickets & Suivi</h3>
@@ -187,13 +188,12 @@
             <textarea id="td-reply" style="min-height:80px" placeholder="Répondre au staff…"></textarea>
           </div>
           <div style="display:flex;gap:18px">
-            <button class="btn sm" onclick="sendReply()">Envoyer</button>
+            <button class="btn sm" id="btn-send-reply" onclick="sendReply()">Envoyer</button>
             <button class="linkline" onclick="closeDetail()">Fermer</button>
           </div>
         </div>
       </div>
 
-      <!-- 4. NOUVELLE REQUÊTE -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Nouvelle requête au staff</h3>
@@ -332,7 +332,6 @@ async function init(){
   updateStatUI();
   await loadTickets();
 
-  // Ouvre automatiquement le ticket si le joueur a cliqué sur une notification
   const urlParams = new URLSearchParams(window.location.search);
   const ticketIdToOpen = urlParams.get('ticket');
   if (ticketIdToOpen) {
@@ -385,15 +384,18 @@ async function saveCharacter(submit){
   document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
 
   if (submit) {
-    const { data: existing } = await sb.from('tickets').select('id').eq('user_id', ME.id).eq('type', 'validation_background').maybeSingle();
+    const { data: latestTicket } = await sb.from('tickets').select('id, status').eq('user_id', ME.id).eq('type', 'validation_background').order('created_at', { ascending: false }).limit(1).maybeSingle();
     let tId;
-    if (!existing) {
+    
+    // NOUVEAU TICKET PROPRE si le précédent est déjà résolu !
+    if (!latestTicket || latestTicket.status === 'resolu') {
       const { data: t } = await sb.from('tickets').insert({ user_id: ME.id, type: 'validation_background', subject: 'Validation — ' + payload.rp_name }).select().single();
       tId = t?.id;
     } else {
-      tId = existing.id;
+      tId = latestTicket.id;
       await sb.from('tickets').update({ subject: 'Validation — ' + payload.rp_name, status: 'en_attente' }).eq('id', tId);
     }
+    
     if (tId) await sb.from('ticket_messages').insert({ ticket_id: tId, author_id: ME.id, body: 'Fiche soumise ou modifiée pour le personnage : ' + payload.rp_name });
     loadTickets();
     showToast('Fiche soumise ! Le staff va l\'examiner.', 'success');
@@ -402,16 +404,12 @@ async function saveCharacter(submit){
 
 async function loadTickets(){
   const { data } = await sb.from('tickets').select('*').eq('user_id', ME.id).order('created_at', { ascending: false });
-  renderTickets(data || []);
-}
-
-function renderTickets(list){
-  document.getElementById('ticket-list').innerHTML = (list.map(t => `
+  document.getElementById('ticket-list').innerHTML = (data || []).map(t => `
       <div class="row" onclick="openTicket('${t.id}')">
         <div><p class="t">${esc(t.subject)}</p><p class="m">${TICKET_LABEL[t.type] || t.type} · ${fdate(t.created_at)}</p></div>
         ${badge(t.status)}
         <span class="fiche">Ouvrir</span>
-      </div>`).join('') || '<p style="color:var(--ink-45);padding:18px 0">Aucun ticket.</p>');
+      </div>`).join('') || '<p style="color:var(--ink-45);padding:18px 0">Aucun ticket.</p>';
 }
 
 async function createTicket(){
@@ -435,6 +433,15 @@ async function openTicket(id){
   document.getElementById('td-subject').textContent = t.subject;
   document.getElementById('td-status').innerHTML = badge(t.status);
   
+  // BLOQUAGE DU TICKET SI RÉSOLU
+  const isResolu = t.status === 'resolu';
+  const replyArea = document.getElementById('td-reply');
+  const replyBtn = document.getElementById('btn-send-reply');
+  replyArea.disabled = isResolu;
+  replyBtn.disabled = isResolu;
+  replyArea.placeholder = isResolu ? "Ce ticket est résolu et fermé." : "Répondre au staff…";
+  if(isResolu) replyArea.value = '';
+  
   const { data: msgs } = await sb.from('ticket_messages').select('id, body, created_at, author:profiles(discord_username, role)').eq('ticket_id', id).order('created_at');
   
   document.getElementById('td-thread').innerHTML = (msgs || []).map(m => {
@@ -442,7 +449,6 @@ async function openTicket(id){
     return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
   }).join('');
 
-  // 🔔 Système "Lu" pour effacer la notification
   if (msgs && msgs.length > 0) {
     const lastMsg = msgs[msgs.length - 1];
     if (['moderateur','admin','fondateur'].includes(lastMsg.author?.role)) {
@@ -450,8 +456,6 @@ async function openTicket(id){
       if (!readMsgs.includes(lastMsg.id)) {
         readMsgs.push(lastMsg.id);
         localStorage.setItem('read_msgs', JSON.stringify(readMsgs));
-        
-        // Fait disparaître le "+1" instantanément de la cloche
         const bellN = document.querySelector('.bell-n');
         if(bellN) {
            let n = parseInt(bellN.textContent) || 0;
