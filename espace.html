@@ -34,9 +34,30 @@
 /* Verrouillage visuel */
 textarea:disabled { opacity: 0.4; cursor: not-allowed; background: var(--washi) !important; }
 button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* Modal de Prévisualisation */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 40px; opacity: 0; visibility: hidden; transition: 0.3s; overflow-y: auto; backdrop-filter: blur(4px); }
+.modal-overlay.show { opacity: 1; visibility: visible; }
+.modal-content { background: var(--paper); width: 100%; max-width: 820px; border-radius: 8px; border: 1px solid var(--ink-08); padding: 50px 60px; position: relative; margin: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+.close-modal { position: absolute; top: 24px; right: 24px; background: var(--ink-08); border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; color: var(--sumi); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.close-modal:hover { background: var(--shu); color: #FFF; }
+
+/* Grille de stats pour la prévisualisation */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 40px; margin: 16px 0 30px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ink-08); padding-bottom: 6px; }
+.stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-70); }
+.stat-dots { display: flex; gap: 6px; flex-shrink: 0; }
+.stat-dots .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sumi); }
+.stat-dots .dot.filled { background: var(--sumi); }
+.stat-dots .dot.empty { border-color: var(--ink-18); }
 </style>
 </head>
 <body data-demo-notice="on">
+
+<!-- Modal Prévisualisation -->
+<div id="preview-modal" class="modal-overlay" onclick="if(event.target===this) closePreview()">
+  <div class="modal-content" id="preview-content"></div>
+</div>
 
 <div id="toast-container" class="toast-container"></div>
 
@@ -83,6 +104,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         </div>
       </div>
 
+      <!-- 1. LIAISON MINECRAFT -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Liaison Minecraft</h3>
@@ -100,6 +122,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         </div>
       </div>
 
+      <!-- 2. FICHE DE PERSONNAGE -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Ma fiche de personnage</h3>
@@ -135,20 +158,20 @@ button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         
         <div class="stats-box">
           <h4 style="margin-bottom:18px; font-family:var(--display); font-size:18px; color:var(--sumi)">
-            Attributs <span style="font-weight:normal; font-family:var(--body); font-size:13px; float:right;">Points restants : <b id="pts-left" style="font-size:16px;">0</b> / 40</span>
+            Attributs <span style="font-weight:normal; font-family:var(--body); font-size:13px; float:right;">Points restants : <b id="pts-left" style="font-size:16px;">32</b> / 40</span>
           </h4>
           <div class="form-row" style="gap:24px;">
             <div>
-              <div class="stat-line"><span>Force</span> <button onclick="modStat('for',-1)">-</button> <span id="v-for">5</span> <button onclick="modStat('for',1)">+</button></div>
-              <div class="stat-line"><span>Dextérité</span> <button onclick="modStat('dex',-1)">-</button> <span id="v-dex">5</span> <button onclick="modStat('dex',1)">+</button></div>
-              <div class="stat-line"><span>Constitution</span> <button onclick="modStat('con',-1)">-</button> <span id="v-con">5</span> <button onclick="modStat('con',1)">+</button></div>
-              <div class="stat-line"><span>Intelligence</span> <button onclick="modStat('int',-1)">-</button> <span id="v-int">5</span> <button onclick="modStat('int',1)">+</button></div>
+              <div class="stat-line"><span>Force</span> <button onclick="modStat('for',-1)">-</button> <span id="v-for">1</span> <button onclick="modStat('for',1)">+</button></div>
+              <div class="stat-line"><span>Dextérité</span> <button onclick="modStat('dex',-1)">-</button> <span id="v-dex">1</span> <button onclick="modStat('dex',1)">+</button></div>
+              <div class="stat-line"><span>Constitution</span> <button onclick="modStat('con',-1)">-</button> <span id="v-con">1</span> <button onclick="modStat('con',1)">+</button></div>
+              <div class="stat-line"><span>Intelligence</span> <button onclick="modStat('int',-1)">-</button> <span id="v-int">1</span> <button onclick="modStat('int',1)">+</button></div>
             </div>
             <div>
-              <div class="stat-line"><span>Sagesse</span> <button onclick="modStat('sag',-1)">-</button> <span id="v-sag">5</span> <button onclick="modStat('sag',1)">+</button></div>
-              <div class="stat-line"><span>Charisme</span> <button onclick="modStat('cha',-1)">-</button> <span id="v-cha">5</span> <button onclick="modStat('cha',1)">+</button></div>
-              <div class="stat-line"><span>Perception</span> <button onclick="modStat('per',-1)">-</button> <span id="v-per">5</span> <button onclick="modStat('per',1)">+</button></div>
-              <div class="stat-line"><span>Discrétion</span> <button onclick="modStat('dis',-1)">-</button> <span id="v-dis">5</span> <button onclick="modStat('dis',1)">+</button></div>
+              <div class="stat-line"><span>Sagesse</span> <button onclick="modStat('sag',-1)">-</button> <span id="v-sag">1</span> <button onclick="modStat('sag',1)">+</button></div>
+              <div class="stat-line"><span>Charisme</span> <button onclick="modStat('cha',-1)">-</button> <span id="v-cha">1</span> <button onclick="modStat('cha',1)">+</button></div>
+              <div class="stat-line"><span>Perception</span> <button onclick="modStat('per',-1)">-</button> <span id="v-per">1</span> <button onclick="modStat('per',1)">+</button></div>
+              <div class="stat-line"><span>Discrétion</span> <button onclick="modStat('dis',-1)">-</button> <span id="v-dis">1</span> <button onclick="modStat('dis',1)">+</button></div>
             </div>
           </div>
         </div>
@@ -156,19 +179,23 @@ button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         <div class="field">
           <label for="c-bg">Histoire publique (Visible de tous au registre)</label>
           <textarea id="c-bg" placeholder="D'où vient-il ? Que sait-il faire ? Que veut-il ?…"></textarea>
+          <p class="hint">Formatage supporté : **<b>Gras</b>**, *<i>Italique</i>*, et > pour les citations.</p>
         </div>
         
         <div class="field">
           <label for="c-bg-secret" style="color:var(--shu)">Face cachée / Secrets (Staff uniquement) 🔒</label>
           <textarea id="c-bg-secret" style="border-left: 3px solid var(--shu);" placeholder="Tes véritables intentions, un passé sombre..."></textarea>
+          <p class="hint">Formatage supporté : **<b>Gras</b>**, *<i>Italique</i>*, et > pour les citations.</p>
         </div>
         
         <div style="display:flex;gap:18px;flex-wrap:wrap">
           <button class="btn shu" onclick="saveCharacter(true)"><span class="a">封</span> Soumettre à validation</button>
           <button class="btn sm" onclick="saveCharacter(false)">Enregistrer le brouillon</button>
+          <button class="linkline" onclick="openPreview()" style="margin-left: 10px; font-size: 13px;">👁️ Aperçu de la fiche</button>
         </div>
       </div>
 
+      <!-- 3. MES TICKETS -->
       <div class="panel rv in" id="mes-tickets">
         <div class="panel-head">
           <h3>Mes tickets & Suivi</h3>
@@ -194,6 +221,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         </div>
       </div>
 
+      <!-- 4. NOUVELLE REQUÊTE -->
       <div class="panel rv in">
         <div class="panel-head">
           <h3>Nouvelle requête au staff</h3>
@@ -259,7 +287,75 @@ button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 <script src="assets/app.js"></script>
 <script>
 let ME = null, MYCHAR = null, CURRENT_TICKET = null;
-let STATS = { for: 5, dex: 5, con: 5, int: 5, sag: 5, cha: 5, per: 5, dis: 5 };
+let STATS = { for: 1, dex: 1, con: 1, int: 1, sag: 1, cha: 1, per: 1, dis: 1 };
+
+// === MOTEUR MARKDOWN ULTRA LÉGER ===
+function renderMD(text) {
+  if (!text) return '';
+  let html = esc(text);
+  // Citations
+  html = html.replace(/^&gt;\s?(.*$)/gim, '<blockquote style="margin:10px 0;padding:12px 20px;background:var(--ink-08);border-left:3px solid var(--shu);border-radius:4px;">$1</blockquote>');
+  // Gras
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--sumi)">$1</strong>');
+  // Italique
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Sauts de ligne
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+// === PREVISUALISATION ===
+function renderStatDots(label, value) {
+  let val = (value !== null && value !== undefined) ? value : 1;
+  let dots = '';
+  for (let i = 1; i <= 8; i++) dots += `<span class="dot ${i <= val ? 'filled' : 'empty'}"></span>`;
+  return `<div class="stat-row"><span class="stat-label">${label}</span><div class="stat-dots">${dots}</div></div>`;
+}
+
+function openPreview() {
+  const rpName = document.getElementById('c-name').value.trim() || 'Nom Inconnu';
+  const age = document.getElementById('c-age').value || '—';
+  const metier = document.getElementById('c-metier').value.trim() || '—';
+  const clanSel = document.getElementById('c-clan');
+  const clan = clanSel.options[clanSel.selectedIndex].text;
+  const bg = document.getElementById('c-bg').value.trim();
+  const secret = document.getElementById('c-bg-secret').value.trim();
+
+  let html = `
+    <button class="close-modal" onclick="closePreview()">×</button>
+    <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:10px">Aperçu de la fiche</p>
+    <h1 style="font-family:var(--display);font-weight:800;font-size:36px;margin-bottom:6px;color:var(--sumi)">${esc(rpName)}</h1>
+    <div style="display:flex;gap:28px;font-size:13.5px;color:var(--ink-70);margin-bottom:30px;">
+      <span><b style="display:block;font-size:10.5px;text-transform:uppercase;color:var(--ink-45)">Clan</b>${esc(clan)}</span>
+      <span><b style="display:block;font-size:10.5px;text-transform:uppercase;color:var(--ink-45)">Métier</b>${esc(metier)}</span>
+      <span><b style="display:block;font-size:10.5px;text-transform:uppercase;color:var(--ink-45)">Âge</b>${esc(age)} ans</span>
+    </div>
+    
+    <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:14px">Attributs</p>
+    <div class="stat-grid">
+      ${renderStatDots('Force', STATS.for)} ${renderStatDots('Dextérité', STATS.dex)}
+      ${renderStatDots('Constitution', STATS.con)} ${renderStatDots('Intelligence', STATS.int)}
+      ${renderStatDots('Sagesse', STATS.sag)} ${renderStatDots('Charisme', STATS.cha)}
+      ${renderStatDots('Perception', STATS.per)} ${renderStatDots('Discrétion', STATS.dis)}
+    </div>
+
+    <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:14px">Histoire publique</p>
+    <div style="font-size:15px;color:var(--ink-70);line-height:1.8;">${renderMD(bg) || "<em>Aucune histoire rédigée...</em>"}</div>
+  `;
+
+  if (secret) {
+     html += `
+     <div style="margin-top:30px; padding-top:20px; border-top: 1px dashed var(--ink-18);">
+        <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--shu);margin-bottom:14px">Face cachée (Staff uniquement) 🔒</p>
+        <div style="font-size:15px;color:var(--ink-70);line-height:1.8; border-left: 3px solid var(--shu); padding-left: 14px;">${renderMD(secret)}</div>
+     </div>
+     `;
+  }
+
+  document.getElementById('preview-content').innerHTML = html;
+  document.getElementById('preview-modal').classList.add('show');
+}
+function closePreview() { document.getElementById('preview-modal').classList.remove('show'); }
 
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
@@ -268,10 +364,7 @@ function showToast(message, type = 'success') {
   toast.textContent = message;
   container.appendChild(toast);
   setTimeout(() => toast.classList.add('show'), 10);
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 4500);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4500);
 }
 
 function updateStatUI() {
@@ -310,8 +403,7 @@ async function init(){
   const { data: clans } = await sb.from('clans').select('id, name').order('name');
   fillClans(clans || []);
 
-  const { data: chars } = await sb.from('characters')
-    .select('*').eq('user_id', ME.id).order('created_at').limit(1);
+  const { data: chars } = await sb.from('characters').select('*').eq('user_id', ME.id).order('created_at').limit(1);
   MYCHAR = chars?.[0] || null;
   if (MYCHAR) {
     document.getElementById('c-name').value = MYCHAR.rp_name || '';
@@ -322,8 +414,8 @@ async function init(){
     document.getElementById('c-bg-secret').value = MYCHAR.bg_secret || '';
     document.getElementById('char-status').innerHTML = badge(MYCHAR.status);
     STATS = {
-      for: MYCHAR.stat_for ?? 5, dex: MYCHAR.stat_dex ?? 5, con: MYCHAR.stat_con ?? 5, int: MYCHAR.stat_int ?? 5,
-      sag: MYCHAR.stat_sag ?? 5, cha: MYCHAR.stat_cha ?? 5, per: MYCHAR.stat_per ?? 5, dis: MYCHAR.stat_dis ?? 5
+      for: MYCHAR.stat_for ?? 1, dex: MYCHAR.stat_dex ?? 1, con: MYCHAR.stat_con ?? 1, int: MYCHAR.stat_int ?? 1,
+      sag: MYCHAR.stat_sag ?? 1, cha: MYCHAR.stat_cha ?? 1, per: MYCHAR.stat_per ?? 1, dis: MYCHAR.stat_dis ?? 1
     };
   } else {
     document.getElementById('char-status').innerHTML = '<span class="badge">Aucune fiche</span>';
@@ -340,9 +432,7 @@ async function init(){
   }
 }
 
-function fillClans(clans){
-  document.getElementById('c-clan').innerHTML = '<option value="">Sans clan</option>' + clans.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-}
+function fillClans(clans){ document.getElementById('c-clan').innerHTML = '<option value="">Sans clan</option>' + clans.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join(''); }
 
 async function saveProfile(){
   const pseudo = document.getElementById('mc-pseudo').value.trim();
@@ -386,8 +476,6 @@ async function saveCharacter(submit){
   if (submit) {
     const { data: latestTicket } = await sb.from('tickets').select('id, status').eq('user_id', ME.id).eq('type', 'validation_background').order('created_at', { ascending: false }).limit(1).maybeSingle();
     let tId;
-    
-    // NOUVEAU TICKET PROPRE si le précédent est déjà résolu !
     if (!latestTicket || latestTicket.status === 'resolu') {
       const { data: t } = await sb.from('tickets').insert({ user_id: ME.id, type: 'validation_background', subject: 'Validation — ' + payload.rp_name }).select().single();
       tId = t?.id;
@@ -395,7 +483,6 @@ async function saveCharacter(submit){
       tId = latestTicket.id;
       await sb.from('tickets').update({ subject: 'Validation — ' + payload.rp_name, status: 'en_attente' }).eq('id', tId);
     }
-    
     if (tId) await sb.from('ticket_messages').insert({ ticket_id: tId, author_id: ME.id, body: 'Fiche soumise ou modifiée pour le personnage : ' + payload.rp_name });
     loadTickets();
     showToast('Fiche soumise ! Le staff va l\'examiner.', 'success');
@@ -433,7 +520,6 @@ async function openTicket(id){
   document.getElementById('td-subject').textContent = t.subject;
   document.getElementById('td-status').innerHTML = badge(t.status);
   
-  // BLOQUAGE DU TICKET SI RÉSOLU
   const isResolu = t.status === 'resolu';
   const replyArea = document.getElementById('td-reply');
   const replyBtn = document.getElementById('btn-send-reply');
