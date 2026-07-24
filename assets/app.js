@@ -6,6 +6,16 @@
 
 // ---------- Client ----------
 const sb = DEMO_MODE ? null : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ---------- Gestion du Thème (Clair/Sombre) ----------
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
 
 // ---------- Données démo (visibles tant que Supabase n'est pas branché) ----------
 const DEMO = {
