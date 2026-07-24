@@ -16,11 +16,11 @@
 .skin3d canvas{width:100%!important;height:100%!important;display:block}
 @media(max-width:720px){.sheet-wrap{padding:40px 22px 0}.skin3d{float:none;margin:0 auto 20px}}
 
-/* Nouveau style pour les boules de stats */
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 40px; margin: 16px 0 30px; }
-.stat-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ink-08); padding-bottom: 6px; }
+/* Nouveau style corrigé pour les boules de stats */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px 40px; margin: 16px 0 30px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid var(--ink-08); padding-bottom: 6px; }
 .stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-70); }
-.stat-dots { display: flex; gap: 6px; }
+.stat-dots { display: flex; gap: 6px; flex-shrink: 0; } /* flex-shrink: 0 empêche l'écrasement */
 .stat-dots .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sumi); }
 .stat-dots .dot.filled { background: var(--sumi); }
 .stat-dots .dot.empty { border-color: var(--ink-18); }
@@ -89,7 +89,7 @@
 <script>
 // Générateur de boules pour les stats
 function renderStatDots(label, value) {
-  let val = value || 5; // Sécurité au cas où
+  let val = value || 5; 
   let dots = '';
   for (let i = 1; i <= 8; i++) {
     dots += `<span class="dot ${i <= val ? 'filled' : 'empty'}"></span>`;
