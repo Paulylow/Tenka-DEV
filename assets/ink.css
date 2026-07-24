@@ -246,10 +246,33 @@ table.reg .fiche:hover{color:var(--shu)}
 .linkline:hover{color:var(--sumi)}
 .linkline:hover::after{transform:scaleX(1);transform-origin:left}
 
-.bell{position:relative;display:inline-flex;align-items:center;color:var(--ink-70);transition:color .25s}
-.bell:hover{color:var(--sumi)}
-.bell svg{width:19px;height:19px}
-.bell .bell-n{position:absolute;top:-8px;right:-11px;background:var(--shu);color:#FFF;font-size:10px;font-weight:700;line-height:1;min-width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;border-radius:50%;}
+/* cloche de notifications et menu déroulant */
+.bell-wrap { position: relative; display: inline-block; top: 2px; }
+.bell { position: relative; display: inline-flex; align-items: center; color: var(--ink-70); transition: color .25s; background: none; border: none; cursor: pointer; padding: 0 4px; }
+.bell:hover { color: var(--sumi); }
+.bell .bell-n {
+  position: absolute; top: -6px; right: -8px; background: var(--shu); color: #FFF;
+  font-size: 10px; font-weight: 700; line-height: 1; min-width: 17px; height: 17px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+  border-radius: 50%; pointer-events: none;
+}
+.bell-drop {
+  position: absolute; top: calc(100% + 14px); right: -10px; width: 300px; text-align: left;
+  background: var(--washi-deep); border: 1px solid var(--ink-08);
+  border-radius: 6px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0; visibility: hidden; transform: translateY(10px);
+  transition: all 0.3s var(--ease); z-index: 100;
+}
+.bell-drop.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.bell-drop::before {
+  content: ""; position: absolute; top: -6px; right: 18px; width: 10px; height: 10px;
+  background: var(--washi-deep); border-top: 1px solid var(--ink-08); border-left: 1px solid var(--ink-08);
+  transform: rotate(45deg);
+}
+.notif-item { display: block; padding: 14px 18px; border-bottom: 1px solid var(--ink-08); color: var(--ink-70); font-size: 13px; line-height: 1.4; transition: background 0.2s; }
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--ink-08); color: var(--sumi); }
+.notif-item strong { display: block; color: var(--sumi); font-family: var(--display); font-size: 15px; margin-bottom: 2px; }
 
 .tabs{display:flex;gap:34px;margin-bottom:44px;flex-wrap:wrap;border-bottom:1px solid var(--ink-08);}
 .tabs button{position:relative;background:none;border:none;cursor:pointer;font-size:14px;font-weight:500;letter-spacing:.06em;color:var(--ink-45);padding:12px 0;transition:color .25s;top:1px;}
