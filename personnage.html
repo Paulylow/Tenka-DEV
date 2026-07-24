@@ -15,6 +15,15 @@
 .skin3d{float:right;width:190px;height:300px;margin:0 0 18px 30px;shape-outside:inset(0)}
 .skin3d canvas{width:100%!important;height:100%!important;display:block}
 @media(max-width:720px){.sheet-wrap{padding:40px 22px 0}.skin3d{float:none;margin:0 auto 20px}}
+
+/* Nouveau style pour les boules de stats */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 40px; margin: 16px 0 30px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ink-08); padding-bottom: 6px; }
+.stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-70); }
+.stat-dots { display: flex; gap: 6px; }
+.stat-dots .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sumi); }
+.stat-dots .dot.filled { background: var(--sumi); }
+.stat-dots .dot.empty { border-color: var(--ink-18); }
 </style>
 </head>
 <body>
@@ -78,6 +87,16 @@
 <script src="assets/config.js"></script>
 <script src="assets/app.js"></script>
 <script>
+// Générateur de boules pour les stats
+function renderStatDots(label, value) {
+  let val = value || 5; // Sécurité au cas où
+  let dots = '';
+  for (let i = 1; i <= 8; i++) {
+    dots += `<span class="dot ${i <= val ? 'filled' : 'empty'}"></span>`;
+  }
+  return `<div class="stat-row"><span class="stat-label">${label}</span><div class="stat-dots">${dots}</div></div>`;
+}
+
 async function loadSheet(){
   const id = new URLSearchParams(location.search).get('id');
   const el = document.getElementById('sheet');
@@ -86,9 +105,9 @@ async function loadSheet(){
   if (DEMO_MODE) {
     c = DEMO.characters.find(x => x.id === id) || DEMO.characters[0];
   } else if (id) {
-    // Correction ici : on va chercher le minecraft_pseudo dans la table profiles
+    // Récupération complète (incluant les nouvelles stats)
     const { data } = await sb.from('characters')
-      .select('id, rp_name, age, metier, background, status, clan:clans(name), owner:profiles!characters_user_id_fkey(minecraft_pseudo)')
+      .select('id, rp_name, age, metier, background, status, stat_for, stat_dex, stat_con, stat_int, stat_sag, stat_cha, stat_per, stat_dis, clan:clans(name), owner:profiles!characters_user_id_fkey(minecraft_pseudo)')
       .eq('id', id).single();
     c = data;
   }
@@ -99,7 +118,6 @@ async function loadSheet(){
     return;
   }
 
-  // On récupère le pseudo Minecraft
   const skinPseudo = c.owner?.minecraft_pseudo || c.skin_pseudo;
 
   document.title = c.rp_name + " — Hyōri";
@@ -112,8 +130,22 @@ async function loadSheet(){
       <span><b>Métier</b>${esc(c.metier || '—')}</span>
       <span><b>Âge</b>${c.age ? esc(String(c.age)) + ' ans' : '—'}</span>
     </div>
+    
     <div class="stroke-h" aria-hidden="true"></div>
     ${skinPseudo ? '<div class="skin3d" id="skin3d" title="Skin de ' + esc(skinPseudo) + '"><canvas id="skin-canvas"></canvas></div>' : ''}
+    
+    <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:14px">Attributs</p>
+    <div class="stat-grid">
+      ${renderStatDots('Force', c.stat_for)}
+      ${renderStatDots('Dextérité', c.stat_dex)}
+      ${renderStatDots('Constitution', c.stat_con)}
+      ${renderStatDots('Intelligence', c.stat_int)}
+      ${renderStatDots('Sagesse', c.stat_sag)}
+      ${renderStatDots('Charisme', c.stat_cha)}
+      ${renderStatDots('Perception', c.stat_per)}
+      ${renderStatDots('Discrétion', c.stat_dis)}
+    </div>
+
     <p style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-45);margin-bottom:14px">Histoire publique</p>
     <div class="bg">${esc(c.background || "Cette âme n'a pas encore confié son histoire au registre.")}</div>
     <div style="clear:both"></div>
