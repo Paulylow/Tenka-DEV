@@ -22,6 +22,10 @@
 .stat-dots .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sumi); }
 .stat-dots .dot.filled { background: var(--sumi); }
 .stat-dots .dot.empty { border-color: var(--ink-18); }
+
+/* Verrouillage visuel des champs désactivés */
+textarea:disabled { opacity: 0.4; cursor: not-allowed; background: var(--washi) !important; }
+button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 </style>
 </head>
 <body data-demo-notice="on">
@@ -60,18 +64,33 @@
 
     <div id="panel" hidden>
       <div class="tabs">
-        <button class="active" data-tab="moderation">Modération des fiches <span id="mod-count"></span></button>
-        <button data-tab="tickets">Tickets <span id="tk-count"></span></button>
+        <button class="active" data-tab="moderation">Modération des fiches</button>
+        <button data-tab="tickets">Tickets</button>
         <button data-tab="news">Actualités</button>
       </div>
 
       <!-- ========== MODÉRATION ========== -->
       <div class="tab-pane active" id="pane-moderation">
         <div class="panel">
-          <div class="panel-head">
-            <h3>Fiches en attente de sceau</h3>
-            <p class="panel-sub">Valider publie la fiche au Recensement</p>
+          
+          <!-- NOUVEAU FILTRE POUR LES FICHES -->
+          <div class="panel-head" style="margin-bottom: 20px;">
+            <div>
+              <h3>Fiches de personnage</h3>
+              <p class="panel-sub">Valider publie la fiche au Recensement</p>
+            </div>
+            <div class="filter-line" style="margin-bottom:0;">
+              <div class="field" style="margin:0; min-width:210px;">
+                <select id="mod-filter" onchange="loadModeration()">
+                  <option value="en_attente" selected>En attente (Sceau requis)</option>
+                  <option value="rejete">Modifications demandées</option>
+                  <option value="valide">Fiches Validées</option>
+                </select>
+                <div class="stroke-h" aria-hidden="true"></div>
+              </div>
+            </div>
           </div>
+          
           <div class="rowlist" id="mod-list"></div>
 
           <div id="mod-detail" hidden>
@@ -93,8 +112,8 @@
               </div>
               
               <div class="mod-actions">
-                <button class="btn sm shu" onclick="moderate('valide')"><span class="a">検</span> Valider la fiche</button>
-                <button class="btn sm" onclick="moderate('rejete')">Demander des modifications</button>
+                <button class="btn sm shu" id="btn-mod-valide" onclick="moderate('valide')"><span class="a">検</span> Valider la fiche</button>
+                <button class="btn sm" id="btn-mod-rejete" onclick="moderate('rejete')">Demander des modifications</button>
                 <button class="linkline" onclick="document.getElementById('mod-detail').hidden = true">Fermer</button>
               </div>
             </div>
@@ -138,7 +157,7 @@
               <textarea id="tk-reply" style="min-height:80px" placeholder="Répondre au joueur…"></textarea>
             </div>
             <div style="display:flex;gap:18px">
-              <button class="btn sm" onclick="staffReply()">Envoyer</button>
+              <button class="btn sm" id="btn-staff-reply" onclick="staffReply()">Envoyer</button>
               <button class="linkline" onclick="document.getElementById('tk-detail').hidden = true">Fermer</button>
             </div>
           </div>
@@ -215,33 +234,18 @@
 <script src="assets/app.js"></script>
 <script>
 let ME = null, MOD_CURRENT = null, TK_CURRENT = null;
-let MOD_TICKET = null; // Ticket de validation associé à la fiche
+let MOD_TICKET = null;
 
-// onglets
 document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x === b));
-  document.querySelectorAll('.tab-pane').forEach(p =>
-    p.classList.toggle('active', p.id === 'pane-' + b.dataset.tab));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + b.dataset.tab));
 }));
 
 async function init(){
-  if (DEMO_MODE) {
-    document.getElementById('panel').hidden = false;
-    document.getElementById('mod-list').innerHTML = demoRow('Takeda Harunobu', 'Validation en attente (démo)', 'en_attente');
-    document.getElementById('tk-list').innerHTML = demoRow('Souci de resource pack', 'Question HRP (démo)', 'en_traitement');
-    document.getElementById('news-list').innerHTML = DEMO.news.map(n =>
-      demoRow(n.title, CAT_LABEL[n.category] + ' · ' + fdate(n.published_at), 'valide')).join('');
-    return;
-  }
-
   ME = await getProfile();
   if (!isStaff(ME)) { document.getElementById('denied').hidden = false; return; }
   document.getElementById('panel').hidden = false;
   loadModeration(); loadStaffTickets(); loadNewsAdmin();
-}
-
-function demoRow(t, m, s){
-  return `<div class="row"><div><p class="t">${esc(t)}</p><p class="m">${esc(m)}</p></div>${badge(s)}<span class="fiche">Démo</span></div>`;
 }
 
 function renderStatDots(label, value) {
@@ -253,19 +257,19 @@ function renderStatDots(label, value) {
 
 // ---------- MODÉRATION ----------
 async function loadModeration(){
+  const f = document.getElementById('mod-filter').value;
   const { data } = await sb.from('characters')
     .select('id, user_id, rp_name, age, metier, background, bg_secret, stat_for, stat_dex, stat_con, stat_int, stat_sag, stat_cha, stat_per, stat_dis, status, updated_at, clan:clans(name), owner:profiles!characters_user_id_fkey(discord_username)')
-    .eq('status', 'en_attente').order('updated_at');
+    .eq('status', f).order('updated_at', { ascending: false });
+    
   const list = data || [];
-  document.getElementById('mod-count').textContent = list.length ? '(' + list.length + ')' : '';
   document.getElementById('mod-list').innerHTML = list.map(c => `
     <div class="row" onclick='openMod(${JSON.stringify(c).replaceAll("'", "&#39;")})'>
       <div><p class="t">${esc(c.rp_name)}</p>
       <p class="m">par ${esc(c.owner?.discord_username || '?')} · ${fdate(c.updated_at)}</p></div>
       ${badge(c.status)}
       <span class="fiche">Examiner</span>
-    </div>`).join('') ||
-    '<p style="color:var(--ink-45);padding:16px 0">Aucune fiche en attente — le registre est à jour.</p>';
+    </div>`).join('') || '<p style="color:var(--ink-45);padding:16px 0">Aucune fiche dans ce filtre.</p>';
 }
 
 async function openMod(c){
@@ -275,6 +279,15 @@ async function openMod(c){
   document.getElementById('md-meta').textContent = (c.clan?.name || 'Sans clan') + ' · ' + (c.metier || '—') + ' · ' + (c.age ? c.age + ' ans' : 'âge ?');
   document.getElementById('mod-reply').value = '';
   document.getElementById('mod-thread').innerHTML = '<p class="m">Chargement de l\'historique...</p>';
+  
+  // Rendre les boutons normaux (si on vient d'une fiche validée juste avant)
+  document.getElementById('btn-mod-valide').style.display = 'inline-flex';
+  document.getElementById('mod-reply').disabled = false;
+  document.getElementById('mod-reply').placeholder = "Laisse un message au joueur...";
+  
+  if(c.status === 'valide') {
+    document.getElementById('btn-mod-valide').style.display = 'none';
+  }
   
   let htmlContent = `<strong>📖 Histoire Publique :</strong>\n${esc(c.background || '(vide)')}\n\n`;
   if (c.bg_secret) htmlContent += `<span style="color:var(--shu)"><strong>🔒 Face Cachée (Secret) :</strong>\n${esc(c.bg_secret)}</span>\n\n`;
@@ -287,17 +300,18 @@ async function openMod(c){
   </div>`;
   document.getElementById('md-bg').innerHTML = htmlContent;
 
-  const { data: t } = await sb.from('tickets').select('id').eq('user_id', c.user_id).eq('type', 'validation_background').maybeSingle();
-  MOD_TICKET = t;
+  // On récupère LE DERNIER ticket de validation
+  const { data: tList } = await sb.from('tickets').select('id, status').eq('user_id', c.user_id).eq('type', 'validation_background').order('created_at', { ascending: false }).limit(1);
+  MOD_TICKET = tList?.[0] || null;
 
-  if (t) {
-    const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', t.id).order('created_at');
+  if (MOD_TICKET) {
+    const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', MOD_TICKET.id).order('created_at');
     document.getElementById('mod-thread').innerHTML = (msgs || []).map(m => {
       const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
       return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
     }).join('') || '<p class="m">Aucun message précédent.</p>';
   } else {
-    document.getElementById('mod-thread').innerHTML = '<p class="m" style="color:var(--shu)">Aucun ticket de validation trouvé. S\'il y a eu un bug, tu peux quand même valider.</p>';
+    document.getElementById('mod-thread').innerHTML = '<p class="m" style="color:var(--shu)">Aucun ticket de validation trouvé (fiche créée en brouillon).</p>';
   }
 }
 
@@ -305,16 +319,15 @@ async function moderate(status){
   if (!MOD_CURRENT) return;
   const msg = document.getElementById('mod-reply').value.trim();
 
-  if (status === 'rejete' && !msg) {
-    return alert("Tu dois écrire un message pour expliquer au joueur ce qui doit être modifié.");
-  }
+  if (status === 'rejete' && !msg) return alert("Tu dois écrire un message pour expliquer au joueur ce qui doit être modifié.");
 
   const { error } = await sb.from('characters').update({ status, validated_by: ME.id }).eq('id', MOD_CURRENT.id);
   if (error) return alert('Erreur : ' + error.message);
 
   let tId = MOD_TICKET ? MOD_TICKET.id : null;
   
-  if (!tId) {
+  if (!tId || MOD_TICKET.status === 'resolu') {
+    // Si pas de ticket, ou si l'ancien était résolu, on en crée un nouveau !
     const { data: newT } = await sb.from('tickets').insert({ user_id: MOD_CURRENT.user_id, type: 'validation_background', subject: 'Validation — ' + MOD_CURRENT.rp_name }).select().single();
     tId = newT?.id;
   }
@@ -328,17 +341,14 @@ async function moderate(status){
   }
 
   document.getElementById('mod-detail').hidden = true;
-  MOD_CURRENT = null;
-  MOD_TICKET = null;
+  MOD_CURRENT = null; MOD_TICKET = null;
   loadModeration();
-  loadStaffTickets(); 
 }
 
 // ---------- TICKETS ----------
 async function loadStaffTickets(){
-  let q = sb.from('tickets')
-    .select('id, subject, type, status, created_at, owner:profiles!tickets_user_id_fkey(discord_username)')
-    .neq('type', 'validation_background') /* <-- CORRECTION ICI : On cache les validations ! */
+  let q = sb.from('tickets').select('id, subject, type, status, created_at, owner:profiles!tickets_user_id_fkey(discord_username)')
+    .neq('type', 'validation_background')
     .order('created_at', { ascending: false });
     
   const f = document.getElementById('tk-filter').value;
@@ -359,6 +369,14 @@ async function openStaffTicket(id){
   document.getElementById('tk-detail').hidden = false;
   document.getElementById('tk-subject').textContent = t.subject;
   document.getElementById('tk-status').innerHTML = badge(t.status);
+  
+  // Griser si résolu
+  const isResolu = t.status === 'resolu';
+  document.getElementById('tk-reply').disabled = isResolu;
+  document.getElementById('btn-staff-reply').disabled = isResolu;
+  document.getElementById('tk-reply').placeholder = isResolu ? "Ce ticket est fermé." : "Répondre au joueur…";
+  if(isResolu) document.getElementById('tk-reply').value = '';
+  
   const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', id).order('created_at');
   document.getElementById('tk-thread').innerHTML = (msgs || []).map(m => {
     const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
@@ -401,12 +419,10 @@ async function saveNews(published){
   const title = document.getElementById('n-title').value.trim();
   const body = document.getElementById('n-body').value.trim();
   if (!title) return alert('Un titre est requis.');
-  const { error } = await sb.from('news').insert({ author_id: ME.id, category: document.getElementById('n-cat').value, title, body, published, published_at: new Date().toISOString() });
-  if (error) return alert('Erreur : ' + error.message);
+  await sb.from('news').insert({ author_id: ME.id, category: document.getElementById('n-cat').value, title, body, published, published_at: new Date().toISOString() });
   document.getElementById('n-title').value = ''; document.getElementById('n-body').value = '';
   loadNewsAdmin();
 }
-
 async function toggleNews(id, published){ await sb.from('news').update({ published }).eq('id', id); loadNewsAdmin(); }
 async function deleteNews(id){ if (!confirm('Supprimer cette actualité ?')) return; await sb.from('news').delete().eq('id', id); loadNewsAdmin(); }
 
