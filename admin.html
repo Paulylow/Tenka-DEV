@@ -13,7 +13,15 @@
 .mod-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px}
 .filter-line{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap;margin-bottom:26px}
 .filter-line .field{margin:0;min-width:170px}
-.admin-stats-badge { display:inline-block; background: var(--ink-18); padding: 2px 8px; border-radius: 4px; font-weight:bold; font-size:12px; margin-right:6px; margin-bottom:4px; color:var(--sumi); }
+
+/* Nouveau style pour les boules de stats */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 40px; margin: 16px 0; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ink-08); padding-bottom: 6px; }
+.stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-70); }
+.stat-dots { display: flex; gap: 6px; }
+.stat-dots .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sumi); }
+.stat-dots .dot.filled { background: var(--sumi); }
+.stat-dots .dot.empty { border-color: var(--ink-18); }
 </style>
 </head>
 <body data-demo-notice="on">
@@ -223,6 +231,16 @@ function demoRow(t, m, s){
   return `<div class="row"><div><p class="t">${esc(t)}</p><p class="m">${esc(m)}</p></div>${badge(s)}<span class="fiche">Démo</span></div>`;
 }
 
+// Générateur de boules pour les stats
+function renderStatDots(label, value) {
+  let val = value || 5; // Sécurité si la stat est null
+  let dots = '';
+  for (let i = 1; i <= 8; i++) {
+    dots += `<span class="dot ${i <= val ? 'filled' : 'empty'}"></span>`;
+  }
+  return `<div class="stat-row"><span class="stat-label">${label}</span><div class="stat-dots">${dots}</div></div>`;
+}
+
 // ---------- MODÉRATION ----------
 async function loadModeration(){
   const { data } = await sb.from('characters')
@@ -247,20 +265,21 @@ function openMod(c){
   document.getElementById('md-meta').textContent =
     (c.clan?.name || 'Sans clan') + ' · ' + (c.metier || '—') + ' · ' + (c.age ? c.age + ' ans' : 'âge ?');
   
-  // Affichage sécurisé des données
   let htmlContent = `<strong>📖 Histoire Publique :</strong>\n${esc(c.background || '(vide)')}\n\n`;
   if (c.bg_secret) {
     htmlContent += `<span style="color:var(--shu)"><strong>🔒 Face Cachée (Secret) :</strong>\n${esc(c.bg_secret)}</span>\n\n`;
   }
-  htmlContent += `<strong>⚔️ Attributs :</strong>\n<div style="margin-top:6px;">
-    <span class="admin-stats-badge">FOR ${c.stat_for}</span>
-    <span class="admin-stats-badge">DEX ${c.stat_dex}</span>
-    <span class="admin-stats-badge">CON ${c.stat_con}</span>
-    <span class="admin-stats-badge">INT ${c.stat_int}</span>
-    <span class="admin-stats-badge">SAG ${c.stat_sag}</span>
-    <span class="admin-stats-badge">CHA ${c.stat_cha}</span>
-    <span class="admin-stats-badge">PER ${c.stat_per}</span>
-    <span class="admin-stats-badge">DIS ${c.stat_dis}</span>
+  
+  htmlContent += `<strong>⚔️ Attributs :</strong>\n
+  <div class="stat-grid">
+    ${renderStatDots('Force', c.stat_for)}
+    ${renderStatDots('Dextérité', c.stat_dex)}
+    ${renderStatDots('Constitution', c.stat_con)}
+    ${renderStatDots('Intelligence', c.stat_int)}
+    ${renderStatDots('Sagesse', c.stat_sag)}
+    ${renderStatDots('Charisme', c.stat_cha)}
+    ${renderStatDots('Perception', c.stat_per)}
+    ${renderStatDots('Discrétion', c.stat_dis)}
   </div>`;
   
   document.getElementById('md-bg').innerHTML = htmlContent;
