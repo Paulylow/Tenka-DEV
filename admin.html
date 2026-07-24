@@ -239,7 +239,7 @@ let MOD_TICKET = null;
 function renderMD(text) {
   if (!text) return '';
   let html = esc(text);
-  html = html.replace(/^&gt;\s?(.*$)/gim, '<blockquote style="margin:10px 0;padding:12px 20px;background:var(--ink-08);border-left:3px solid var(--shu);border-radius:4px;">$1</blockquote>');
+  html = html.replace(/^&gt;\s?(.*$)/gim, '<blockquote style="margin:12px 0;padding:14px 20px;background:var(--ink-08);border-left:3px solid var(--shu);border-right:3px solid var(--shu);border-radius:4px;overflow:hidden;">「 <em>$1</em> 」</blockquote>');
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--sumi)">$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
   html = html.replace(/\n/g, '<br>');
@@ -313,7 +313,7 @@ async function openMod(c){
     const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', MOD_TICKET.id).order('created_at');
     document.getElementById('mod-thread').innerHTML = (msgs || []).map(m => {
       const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
-      return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
+      return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${renderMD(m.body)}</div>`;
     }).join('') || '<p class="m">Aucun message précédent.</p>';
   } else {
     document.getElementById('mod-thread').innerHTML = '<p class="m" style="color:var(--shu)">Aucun ticket de validation trouvé (fiche créée en brouillon).</p>';
@@ -380,7 +380,7 @@ async function openStaffTicket(id){
   const { data: msgs } = await sb.from('ticket_messages').select('body, created_at, author:profiles(discord_username, role)').eq('ticket_id', id).order('created_at');
   document.getElementById('tk-thread').innerHTML = (msgs || []).map(m => {
     const staff = ['moderateur','admin','fondateur'].includes(m.author?.role);
-    return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${esc(m.body).replace(/\n/g, '<br>')}</div>`;
+    return `<div class="msg ${staff ? 'staff' : ''}"><p class="who">${staff ? 'Staff — ' : ''}${esc(m.author?.discord_username || '?')} · ${fdate(m.created_at)}</p>${renderMD(m.body)}</div>`;
   }).join('');
 }
 
